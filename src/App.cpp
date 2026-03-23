@@ -81,6 +81,12 @@ void App::LoadLevel(int level) {
             m_Root->AddChild(stone);
         }
         m_Trap->m_Transform.translation = { 0.0f, -171.0f };
+        
+        if (!m_Box) {
+            m_Box = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "box.png"), 0.1f); // 層級比角色高一點
+            m_Root->AddChild(m_Box);
+        }
+        m_Box->m_Transform.translation = { -100.0f, -171.0f };
     }
 
     m_CurrentLevelNum = level;
@@ -94,7 +100,7 @@ void App::Update() {
     if (m_CurrentState == State::DEAD) {
         if (Util::Input::IsKeyDown(Util::Keycode::R)) {
             m_DeadScreen->SetVisible(false);
-            LoadLevel(m_CurrentLevelNum); // 死亡後按 R 重載當前關卡
+            LoadLevel(m_CurrentLevelNum); 
             m_CurrentState = State::UPDATE;
         }
         m_Root->Update();
@@ -115,7 +121,6 @@ void App::Update() {
 
     // --- 遊戲更新 ---
     if (m_CurrentState == State::UPDATE) {
-        // 新增按 N 進入下一關
         if (Util::Input::IsKeyDown(Util::Keycode::N)) {
             LoadLevel(m_CurrentLevelNum + 1);
             return;
@@ -124,6 +129,7 @@ void App::Update() {
         const Uint8* keys = SDL_GetKeyboardState(NULL);
         float iceDx = 0.0f, fireDx = 0.0f;
 
+        // 1. 取得輸入
         if (keys[SDL_SCANCODE_A]) iceDx -= m_MoveSpeed;
         if (keys[SDL_SCANCODE_D]) iceDx += m_MoveSpeed;
         if (Util::Input::IsKeyDown(Util::Keycode::W) && m_IceOnGround) { m_IceVelocityY = m_JumpForce; m_IceOnGround = false; }
@@ -132,26 +138,88 @@ void App::Update() {
         if (keys[SDL_SCANCODE_RIGHT]) fireDx += m_MoveSpeed;
         if (Util::Input::IsKeyDown(Util::Keycode::UP) && m_FireOnGround) { m_FireVelocityY = m_JumpForce; m_FireOnGround = false; }
 
-        // 物理位移
+        // 2. 處理水平推箱子 (在移動角色座標前先處理)
+        auto handleAdvancedPush = [&]() {
+            const float PUSH_SPEED = 3.5f;
+            const float SANDWICH_SPEED = 2.0f;
+
+            // --- 情況 A：Ice 推 Box ---
+            if (iceDx != 0 && IsColliding(m_Ice, m_Box)) {
+                float icePos = m_Ice->m_Transform.translation.x;
+                float boxPos = m_Box->m_Transform.translation.x;
+                bool isPushing = (icePos < boxPos && iceDx > 0) || (icePos > boxPos && iceDx < 0);
+
+                if (isPushing) {
+                    float finalDx = (iceDx > 0 ? 1.0f : -1.0f);
+                    bool isSandwich = IsColliding(m_Box, m_Fire);
+
+                    if (isSandwich) {
+                        finalDx *= SANDWICH_SPEED;
+                        m_Fire->m_Transform.translation.x += finalDx;
+                    } else {
+                        finalDx *= PUSH_SPEED;
+                    }
+
+                    m_Box->m_Transform.translation.x += finalDx;
+                    bool hitStone = false;
+                    for (auto& s : m_Stones) { if (IsColliding(m_Box, s)) { hitStone = true; break; } }
+
+                    if (hitStone) {
+                        m_Box->m_Transform.translation.x -= finalDx;
+                        if (isSandwich) m_Fire->m_Transform.translation.x -= finalDx;
+                        iceDx = 0;
+                    } else {
+                        iceDx = finalDx;
+                        if (isSandwich) fireDx = finalDx;
+                    }
+                }
+            }
+
+            // --- 情況 B：Fire 推 Box (同樣加入方向檢查) ---
+            if (fireDx != 0 && IsColliding(m_Fire, m_Box)) {
+                float firePos = m_Fire->m_Transform.translation.x;
+                float boxPos = m_Box->m_Transform.translation.x;
+                bool isPushing = (firePos < boxPos && fireDx > 0) || (firePos > boxPos && fireDx < 0);
+
+                if (isPushing) {
+                    float finalDx = (fireDx > 0 ? 1.0f : -1.0f);
+                    bool isSandwich = IsColliding(m_Box, m_Ice);
+
+                    if (isSandwich) {
+                        finalDx *= SANDWICH_SPEED;
+                        m_Ice->m_Transform.translation.x += finalDx;
+                    } else {
+                        finalDx *= PUSH_SPEED;
+                    }
+
+                    m_Box->m_Transform.translation.x += finalDx;
+                    bool hitStone = false;
+                    for (auto& s : m_Stones) { if (IsColliding(m_Box, s)) { hitStone = true; break; } }
+
+                    if (hitStone) {
+                        m_Box->m_Transform.translation.x -= finalDx;
+                        if (isSandwich) m_Ice->m_Transform.translation.x -= finalDx;
+                        fireDx = 0;
+                    } else {
+                        fireDx = finalDx;
+                        if (isSandwich) iceDx = finalDx;
+                    }
+                }
+            }
+        };
+
+        handleAdvancedPush();
+
+        // 執行最後位移
         m_IceVelocityY -= m_Gravity;
         m_FireVelocityY -= m_Gravity;
         m_Ice->m_Transform.translation += glm::vec2(iceDx, m_IceVelocityY);
         m_Fire->m_Transform.translation += glm::vec2(fireDx, m_FireVelocityY);
 
-        // 雙人過關判定
-        if (IsColliding(m_Ice, m_IceDoor) && IsColliding(m_Fire, m_FireDoor)) {
-            LoadLevel(m_CurrentLevelNum + 1);
-            return;
-        }
-
-        // 陷阱碰撞判定 (碰到就死)
-        if (IsColliding(m_Ice, m_Trap) || IsColliding(m_Fire, m_Trap)) {
-            m_CurrentState = State::DEAD;
-            m_DeadScreen->SetVisible(true);
-        }
-
-        // 地板碰撞
+        // 4. 地板與踩箱子碰撞
         bool iG = false, fG = false;
+
+        // 建立一個臨時列表包含石頭和箱子，統一處理垂直碰撞
         for (const auto& stone : m_Stones) {
             float sTop = stone->m_Transform.translation.y + (stone->GetScaledSize().y / 2.0f);
             if (m_IceVelocityY <= 0 && IsColliding(m_Ice, stone)) {
@@ -165,8 +233,34 @@ void App::Update() {
                 fG = true;
             }
         }
+
+        // 處理踩在箱子上面 (只有 Y 軸速度向下且位置在箱子上方才判定)
+        float bTop = m_Box->m_Transform.translation.y + (m_Box->GetScaledSize().y / 2.0f);
+        if (m_IceVelocityY <= 0 && IsColliding(m_Ice, m_Box) && m_Ice->m_Transform.translation.y > m_Box->m_Transform.translation.y) {
+            m_IceVelocityY = 0;
+            m_Ice->m_Transform.translation.y = bTop + (m_Ice->GetScaledSize().y / 2.0f);
+            iG = true;
+        }
+        if (m_FireVelocityY <= 0 && IsColliding(m_Fire, m_Box) && m_Fire->m_Transform.translation.y > m_Box->m_Transform.translation.y) {
+            m_FireVelocityY = 0;
+            m_Fire->m_Transform.translation.y = bTop + (m_Fire->GetScaledSize().y / 2.0f);
+            fG = true;
+        }
+
         m_IceOnGround = iG; m_FireOnGround = fG;
 
+        // 5. 過關與死亡判定
+        if (IsColliding(m_Ice, m_IceDoor) && IsColliding(m_Fire, m_FireDoor)) {
+            LoadLevel(m_CurrentLevelNum + 1);
+            return;
+        }
+
+        if (IsColliding(m_Ice, m_Trap) || IsColliding(m_Fire, m_Trap)) {
+            m_CurrentState = State::DEAD;
+            m_DeadScreen->SetVisible(true);
+        }
+
+        // 更新 UI
         m_IcePosText->SetDrawable(std::make_shared<Util::Text>(FONT_PATH + "arial.ttf", 20, "Ice: (" + std::to_string((int)m_Ice->m_Transform.translation.x) + "," + std::to_string((int)m_Ice->m_Transform.translation.y) + ")", Util::Color(51,153,255)));
         m_FirePosText->SetDrawable(std::make_shared<Util::Text>(FONT_PATH + "arial.ttf", 20, "Fire: (" + std::to_string((int)m_Fire->m_Transform.translation.x) + "," + std::to_string((int)m_Fire->m_Transform.translation.y) + ")", Util::Color(255,0,0)));
 
@@ -177,8 +271,8 @@ void App::Update() {
 bool App::IsColliding(const std::shared_ptr<Util::GameObject>& p, const std::shared_ptr<Util::GameObject>& t) {
     glm::vec2 pP = p->m_Transform.translation, pS = p->GetScaledSize();
     glm::vec2 tP = t->m_Transform.translation, tS = t->GetScaledSize();
-    return (pP.x - pS.x/4 < tP.x + tS.x/2 && pP.x + pS.x/4 > tP.x - tS.x/2 &&
-            pP.y - pS.y/2 < tP.y + tS.y/2 && pP.y + pS.y/2 > tP.y - tS.y/2);
+    return (pP.x - pS.x / 2.1f < tP.x + tS.x / 2.0f && pP.x + pS.x / 2.1f > tP.x - tS.x / 2.0f &&
+            pP.y - pS.y / 2.0f < tP.y + tS.y / 2.0f && pP.y + pS.y / 2.0f > tP.y - tS.y / 2.0f);
 }
 
 void App::ClearLevel() {
