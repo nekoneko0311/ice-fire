@@ -72,6 +72,17 @@ void App::LoadLevel(int level) {
     m_IceDoor->m_Transform.translation = { -300.0f, -171.0f };
     m_FireDoor->m_Transform.translation = { 300.0f, -171.0f };
 
+
+    //設定機關位置
+    m_Button = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
+    m_Button->m_Transform.translation = { 150.0f, -185.0f }; // 放在地板上
+    m_Root->AddChild(m_Button);
+
+    m_Gear = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
+    m_Gear->m_Transform.translation = { 400.0f, -100.0f }; // 機關位置
+    m_GearOriginalPos = m_Gear->m_Transform.translation;
+    m_Root->AddChild(m_Gear);
+
     // 依照關卡編號設定地形 (目前第二關與第一關相同)
     if (level == 1 || level == 2) {
         for (int i = 0; i < 50; ++i) {
@@ -81,7 +92,7 @@ void App::LoadLevel(int level) {
             m_Root->AddChild(stone);
         }
         m_Trap->m_Transform.translation = { 0.0f, -171.0f };
-        
+
         if (!m_Box) {
             m_Box = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "box.png"), 0.1f); // 層級比角色高一點
             m_Root->AddChild(m_Box);
@@ -248,6 +259,22 @@ void App::Update() {
         }
 
         m_IceOnGround = iG; m_FireOnGround = fG;
+
+
+        //機關邏輯
+        bool isPressed = IsColliding(m_Ice, m_Button) || 
+                 IsColliding(m_Fire, m_Button) || 
+                 IsColliding(m_Box, m_Button);
+
+        if (isPressed) {
+            // 按鈕被壓住：按鈕消失（或變色），機關往右移 50px
+            m_Button->SetVisible(false);
+            m_Gear->m_Transform.translation.x = m_GearOriginalPos.x + 50.0f;
+        } else {
+            // 沒有人壓住：按鈕出現，機關回到原位
+            m_Button->SetVisible(true);
+            m_Gear->m_Transform.translation.x = m_GearOriginalPos.x;
+        }
 
         // 5. 過關與死亡判定
         if (IsColliding(m_Ice, m_IceDoor) && IsColliding(m_Fire, m_FireDoor)) {

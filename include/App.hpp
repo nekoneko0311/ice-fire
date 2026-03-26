@@ -43,11 +43,17 @@ private:
     std::vector<std::shared_ptr<Util::GameObject>> m_Stones;
     std::shared_ptr<Util::GameObject> m_IceDoor;
     std::shared_ptr<Util::GameObject> m_FireDoor;
-    std::shared_ptr<Util::GameObject> m_Box;
+    std::shared_ptr<Util::GameObject> m_Box;                //箱子
 
     // 座標文字
     std::shared_ptr<Util::GameObject> m_IcePosText;
     std::shared_ptr<Util::GameObject> m_FirePosText;
+
+
+    //機關
+    std::shared_ptr<Util::GameObject> m_Button;
+    std::shared_ptr<Util::GameObject> m_Gear;
+    glm::vec2 m_GearOriginalPos;
 
     float m_Gravity = 0.4f;
     float m_JumpForce = 12.0f;
