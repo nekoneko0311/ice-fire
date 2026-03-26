@@ -5,6 +5,7 @@
 #include "Util/Keycode.hpp"
 #include "Util/Logger.hpp"
 #include "Util/Text.hpp"
+#include "cmath"
 
 const std::string PIC_PATH = "../Resources/picture/";
 const std::string FONT_PATH = "../Resources/font/";
@@ -54,6 +55,15 @@ void App::Start() {
     m_FirePosText->m_Transform.translation = { 570.0f, 340.0f };
     m_Root->AddChild(m_FirePosText);
 
+    //diamond
+    m_ScoreText = std::make_shared<Util::GameObject>(
+    std::make_shared<Util::Text>(font, 24, "Score: 0", Util::Color(255, 255, 0)),
+    10.0f
+);
+    m_ScoreText->SetPivot({0.0f, 1.0f});
+    m_ScoreText->m_Transform.translation = { 0.0f, 340.0f };
+    m_Root->AddChild(m_ScoreText);
+
     // 初始化第一關
     LoadLevel(1);
     m_CurrentState = State::UPDATE;
@@ -99,6 +109,29 @@ void App::LoadLevel(int level) {
         }
         m_Box->m_Transform.translation = { -100.0f, -171.0f };
     }
+
+    //diamond
+    m_RedDiamondCollected = false;
+    m_BlueDiamondCollected = false;
+    m_DiamondFloatTime = 0.0f;
+
+    m_RedDiamond = std::make_shared<Util::GameObject>(
+    std::make_shared<Util::Image>(PIC_PATH + "r_diamond.png"), 0.2f
+);
+    m_RedDiamond->m_Transform.translation = { 100.0f, -120.0f };
+    m_RedDiamond->m_Transform.scale = { 0.6f, 0.6f };
+    m_RedDiamond->SetVisible(true);
+    m_Root->AddChild(m_RedDiamond);
+    m_RedDiamondBasePos = m_RedDiamond->m_Transform.translation;
+
+    m_BlueDiamond = std::make_shared<Util::GameObject>(
+        std::make_shared<Util::Image>(PIC_PATH + "b_diamond.png"), 0.2f
+    );
+    m_BlueDiamond->m_Transform.translation = { -100.0f, -120.0f };
+    m_BlueDiamond->m_Transform.scale = { 0.6f, 0.6f };
+    m_BlueDiamond->SetVisible(true);
+    m_Root->AddChild(m_BlueDiamond);
+    m_BlueDiamondBasePos = m_BlueDiamond->m_Transform.translation;
 
     m_CurrentLevelNum = level;
     LOG_INFO("Loading Level " + std::to_string(level));
@@ -287,10 +320,42 @@ void App::Update() {
             m_DeadScreen->SetVisible(true);
         }
 
+        //diamond
+        if (!m_RedDiamondCollected && m_RedDiamond) {
+            if (IsColliding(m_Fire, m_RedDiamond)) {
+                m_RedDiamondCollected = true;
+                m_RedDiamond->SetVisible(false);
+                m_Score += 1;
+            }
+        }
+
+        if (!m_BlueDiamondCollected && m_BlueDiamond) {
+            if (IsColliding(m_Ice, m_BlueDiamond)) {
+                m_BlueDiamondCollected = true;
+                m_BlueDiamond->SetVisible(false);
+                m_Score += 1;
+            }
+        }
+        m_DiamondFloatTime += m_DiamondFloatSpeed;
+
+        if (!m_RedDiamondCollected && m_RedDiamond) {
+            m_RedDiamond->m_Transform.translation.y =
+                m_RedDiamondBasePos.y + std::sin(m_DiamondFloatTime) * m_DiamondFloatRange;
+        }
+
+        if (!m_BlueDiamondCollected && m_BlueDiamond) {
+            m_BlueDiamond->m_Transform.translation.y =
+                m_BlueDiamondBasePos.y + std::sin(m_DiamondFloatTime) * m_DiamondFloatRange;
+        }
+
+
+
         // 更新 UI
         m_IcePosText->SetDrawable(std::make_shared<Util::Text>(FONT_PATH + "arial.ttf", 20, "Ice: (" + std::to_string((int)m_Ice->m_Transform.translation.x) + "," + std::to_string((int)m_Ice->m_Transform.translation.y) + ")", Util::Color(51,153,255)));
         m_FirePosText->SetDrawable(std::make_shared<Util::Text>(FONT_PATH + "arial.ttf", 20, "Fire: (" + std::to_string((int)m_Fire->m_Transform.translation.x) + "," + std::to_string((int)m_Fire->m_Transform.translation.y) + ")", Util::Color(255,0,0)));
-
+        m_ScoreText->SetDrawable(std::make_shared<Util::Text>(FONT_PATH + "arial.ttf",24,"Score: " + std::to_string(m_Score),Util::Color(255, 255, 0)
+    )
+);
         m_Root->Update();
     }
 }
@@ -303,10 +368,30 @@ bool App::IsColliding(const std::shared_ptr<Util::GameObject>& p, const std::sha
 }
 
 void App::ClearLevel() {
-    for (auto& stone : m_Stones) m_Root->RemoveChild(stone);
+    for (auto& stone : m_Stones) {
+        m_Root->RemoveChild(stone);
+    }
     m_Stones.clear();
 
-    // 增加新物件之後要記得在這邊新增清理
+    if (m_Button) {
+        m_Root->RemoveChild(m_Button);
+        m_Button = nullptr;
+    }
+
+    if (m_Gear) {
+        m_Root->RemoveChild(m_Gear);
+        m_Gear = nullptr;
+    }
+
+    if (m_RedDiamond) {
+        m_Root->RemoveChild(m_RedDiamond);
+        m_RedDiamond = nullptr;
+    }
+
+    if (m_BlueDiamond) {
+        m_Root->RemoveChild(m_BlueDiamond);
+        m_BlueDiamond = nullptr;
+    }
 }
 
 void App::End() { LOG_TRACE("End"); }
