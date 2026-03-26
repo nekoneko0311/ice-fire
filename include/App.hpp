@@ -45,6 +45,25 @@ private:
     std::shared_ptr<Util::GameObject> m_FireDoor;
     std::shared_ptr<Util::GameObject> m_Box;                //箱子
 
+
+    // ===== 新增：紅色寶石 =====
+    std::shared_ptr<Util::GameObject> m_RedDiamond;
+    bool m_RedDiamondCollected = false;
+    std::shared_ptr<Util::GameObject> m_BlueDiamond;
+    bool m_BlueDiamondCollected = false;
+
+    glm::vec2 m_RedDiamondBasePos;
+    glm::vec2 m_BlueDiamondBasePos;
+
+    float m_DiamondFloatTime = 0.0f;
+    float m_DiamondFloatSpeed = 0.02f;   // 飄浮速度
+    float m_DiamondFloatRange = 4.0f;    // 上下飄動幅度
+
+    // ===== 新增：分數 =====
+    int m_Score = 0;
+    std::shared_ptr<Util::GameObject> m_ScoreText;
+
+
     // 座標文字
     std::shared_ptr<Util::GameObject> m_IcePosText;
     std::shared_ptr<Util::GameObject> m_FirePosText;
