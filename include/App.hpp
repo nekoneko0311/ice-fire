@@ -40,6 +40,8 @@ private:
     std::shared_ptr<Util::GameObject> m_Ice;
     std::shared_ptr<Util::GameObject> m_Fire;
     std::shared_ptr<Util::GameObject> m_Trap;
+    std::shared_ptr<Util::GameObject> m_IceTrap;  // Ice 碰到會死 (Trap1)
+    std::shared_ptr<Util::GameObject> m_FireTrap; // Fire 碰到會死 (Trap2)
     std::vector<std::shared_ptr<Util::GameObject>> m_Stones;
     std::shared_ptr<Util::GameObject> m_IceDoor;
     std::shared_ptr<Util::GameObject> m_FireDoor;
