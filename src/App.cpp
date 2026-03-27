@@ -47,7 +47,7 @@ void App::Start() {
     std::string font = FONT_PATH + "arial.ttf";
     m_IcePosText = std::make_shared<Util::GameObject>(std::make_shared<Util::Text>(font, 20, "Ice: (0, 0)", Util::Color(51,153,255)), 10.0f);
     m_IcePosText->SetPivot({-1.0f, 1.0f});
-    m_IcePosText->m_Transform.translation = { -570.0f, 340.0f };
+    m_IcePosText->m_Transform.translation = { -560.0f, 340.0f };
     m_Root->AddChild(m_IcePosText);
 
     m_FirePosText = std::make_shared<Util::GameObject>(std::make_shared<Util::Text>(font, 20, "Fire: (0, 0)", Util::Color(255, 0, 0)), 10.0f);
@@ -127,7 +127,18 @@ void App::LoadLevel(int level) {
         }
         m_Box->m_Transform.translation = { -100.0f, -171.0f };
     }
+    m_Switch = std::make_shared<Util::GameObject>(
+        std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f
+    );
+    m_Switch->m_Transform.translation = { -200.0f, -185.0f };
+    m_Root->AddChild(m_Switch);
 
+    m_Gear2 = std::make_shared<Util::GameObject>(
+        std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f
+    );
+    m_Gear2->m_Transform.translation = { -400.0f, -50.0f };
+    m_Gear2OriginalPos = m_Gear2->m_Transform.translation;
+    m_Root->AddChild(m_Gear2);
     //diamond
     m_RedDiamondCollected = false;
     m_BlueDiamondCollected = false;
@@ -204,6 +215,7 @@ void App::Update() {
         auto handleAdvancedPush = [&]() {
             const float PUSH_SPEED = 3.5f;
             const float SANDWICH_SPEED = 2.0f;
+            
 
             if (iceDx != 0 && IsColliding(m_Ice, m_Box)) {
                 float icePos = m_Ice->m_Transform.translation.x;
@@ -254,12 +266,24 @@ void App::Update() {
         auto handleHorizontalObstacle = [&](std::shared_ptr<Util::GameObject> character, float& dx) {
             if (dx == 0) return;
             character->m_Transform.translation.x += dx;
-            if (IsColliding(character, m_Gear)) { character->m_Transform.translation.x -= dx; dx = 0; }
+            if (IsColliding(character, m_Gear)|| IsColliding(character, m_Gear2)) { character->m_Transform.translation.x -= dx; dx = 0; }
             else { character->m_Transform.translation.x -= dx; }
         };
         handleHorizontalObstacle(m_Ice, iceDx);
         handleHorizontalObstacle(m_Fire, fireDx);
 
+        /* //擴充水平阻擋
+        auto handleHorizontalObstacleAll = [&](std::shared_ptr<Util::GameObject> character, float& dx) {
+            if (dx == 0) return;
+            character->m_Transform.translation.x += dx;
+            if (IsColliding(character, m_Gear) || IsColliding(character, m_Gear2)) { // 加入 Gear2
+                character->m_Transform.translation.x -= dx;
+                dx = 0;
+            } else {
+                character->m_Transform.translation.x -= dx;
+            }
+        };
+ *///目前箱子不會撞到gear，所以先不加入gear2的判定(其實1也用不到)
         // 執行最後位移
         m_IceVelocityY -= m_Gravity;
         m_FireVelocityY -= m_Gravity;
@@ -271,6 +295,7 @@ void App::Update() {
         std::vector<std::shared_ptr<Util::GameObject>> collisionGroup = m_Stones;
         collisionGroup.push_back(m_Box);
         collisionGroup.push_back(m_Gear);
+        collisionGroup.push_back(m_Gear2);
 
         for (const auto& obj : collisionGroup) {
             if (!obj) continue;
@@ -311,6 +336,40 @@ void App::Update() {
         //door
         bool iceAtDoor = IsColliding(m_Ice, m_IceDoor);
         bool fireAtDoor = IsColliding(m_Fire, m_FireDoor);
+
+
+        //拉桿邏輯：判斷角色碰到拉桿的哪一側
+        auto handleSwitch = [&](std::shared_ptr<Util::GameObject> character, float dx, bool isIce) {
+            if (IsColliding(character, m_Switch)) {
+                float charX = character->m_Transform.translation.x;
+                float swX = m_Switch->m_Transform.translation.x;
+
+                bool pushingRight = isIce ? keys[SDL_SCANCODE_D] : keys[SDL_SCANCODE_RIGHT];
+                bool pushingLeft = isIce ? keys[SDL_SCANCODE_A] : keys[SDL_SCANCODE_LEFT];
+
+
+                if (charX < swX && dx > 0 && pushingRight && m_IsSwitchOn) {
+                    m_IsSwitchOn = false;
+                    m_Switch->SetDrawable(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"));
+                }
+                else if (charX > swX && dx < 0 && pushingLeft && !m_IsSwitchOn) {
+                    m_IsSwitchOn = true;
+                    m_Switch->SetDrawable(std::make_shared<Util::Image>(PIC_PATH + "switch1_2.png"));
+                }
+            }
+        };
+
+        // 呼叫時傳入 dx 與身份標記
+        handleSwitch(m_Ice, iceDx, true);
+        handleSwitch(m_Fire, fireDx, false);
+
+
+        // 根據拉桿狀態移動 Gear2
+        if (m_IsSwitchOn) {
+            m_Gear2->m_Transform.translation.x = m_Gear2OriginalPos.x - 50.0f;
+        } else {
+            m_Gear2->m_Transform.translation.x = m_Gear2OriginalPos.x;
+        }
 
         // 控制開關
         m_IceDoorOpening = iceAtDoor;
