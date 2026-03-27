@@ -149,77 +149,65 @@ void App::Update() {
         if (keys[SDL_SCANCODE_RIGHT]) fireDx += m_MoveSpeed;
         if (Util::Input::IsKeyDown(Util::Keycode::UP) && m_FireOnGround) { m_FireVelocityY = m_JumpForce; m_FireOnGround = false; }
 
-        // 2. 處理水平推箱子 (在移動角色座標前先處理)
+        // 2. 處理水平推箱子
         auto handleAdvancedPush = [&]() {
             const float PUSH_SPEED = 3.5f;
             const float SANDWICH_SPEED = 2.0f;
 
-            // --- 情況 A：Ice 推 Box ---
             if (iceDx != 0 && IsColliding(m_Ice, m_Box)) {
                 float icePos = m_Ice->m_Transform.translation.x;
                 float boxPos = m_Box->m_Transform.translation.x;
                 bool isPushing = (icePos < boxPos && iceDx > 0) || (icePos > boxPos && iceDx < 0);
-
                 if (isPushing) {
                     float finalDx = (iceDx > 0 ? 1.0f : -1.0f);
                     bool isSandwich = IsColliding(m_Box, m_Fire);
-
-                    if (isSandwich) {
-                        finalDx *= SANDWICH_SPEED;
-                        m_Fire->m_Transform.translation.x += finalDx;
-                    } else {
-                        finalDx *= PUSH_SPEED;
-                    }
-
+                    if (isSandwich) { finalDx *= SANDWICH_SPEED; m_Fire->m_Transform.translation.x += finalDx; }
+                    else { finalDx *= PUSH_SPEED; }
                     m_Box->m_Transform.translation.x += finalDx;
-                    bool hitStone = false;
-                    for (auto& s : m_Stones) { if (IsColliding(m_Box, s)) { hitStone = true; break; } }
-
-                    if (hitStone) {
+                    bool hitSomething = false;
+                    for (auto& s : m_Stones) { if (IsColliding(m_Box, s)) { hitSomething = true; break; } }
+                    if (IsColliding(m_Box, m_Gear)) hitSomething = true;
+                    if (hitSomething) {
                         m_Box->m_Transform.translation.x -= finalDx;
                         if (isSandwich) m_Fire->m_Transform.translation.x -= finalDx;
                         iceDx = 0;
-                    } else {
-                        iceDx = finalDx;
-                        if (isSandwich) fireDx = finalDx;
-                    }
+                    } else { iceDx = finalDx; if (isSandwich) fireDx = finalDx; }
                 }
             }
 
-            // --- 情況 B：Fire 推 Box (同樣加入方向檢查) ---
             if (fireDx != 0 && IsColliding(m_Fire, m_Box)) {
                 float firePos = m_Fire->m_Transform.translation.x;
                 float boxPos = m_Box->m_Transform.translation.x;
                 bool isPushing = (firePos < boxPos && fireDx > 0) || (firePos > boxPos && fireDx < 0);
-
                 if (isPushing) {
                     float finalDx = (fireDx > 0 ? 1.0f : -1.0f);
                     bool isSandwich = IsColliding(m_Box, m_Ice);
-
-                    if (isSandwich) {
-                        finalDx *= SANDWICH_SPEED;
-                        m_Ice->m_Transform.translation.x += finalDx;
-                    } else {
-                        finalDx *= PUSH_SPEED;
-                    }
-
+                    if (isSandwich) { finalDx *= SANDWICH_SPEED; m_Ice->m_Transform.translation.x += finalDx; }
+                    else { finalDx *= PUSH_SPEED; }
                     m_Box->m_Transform.translation.x += finalDx;
-                    bool hitStone = false;
-                    for (auto& s : m_Stones) { if (IsColliding(m_Box, s)) { hitStone = true; break; } }
-
-                    if (hitStone) {
+                    bool hitSomething = false;
+                    for (auto& s : m_Stones) { if (IsColliding(m_Box, s)) { hitSomething = true; break; } }
+                    if (IsColliding(m_Box, m_Gear)) hitSomething = true;
+                    if (hitSomething) {
                         m_Box->m_Transform.translation.x -= finalDx;
                         if (isSandwich) m_Ice->m_Transform.translation.x -= finalDx;
                         fireDx = 0;
-                    } else {
-                        fireDx = finalDx;
-                        if (isSandwich) iceDx = finalDx;
-                    }
+                    } else { fireDx = finalDx; if (isSandwich) iceDx = finalDx; }
                 }
             }
         };
 
         handleAdvancedPush();
+
+        // 3. 處理與機關(Gear)的水平阻擋
+        auto handleHorizontalObstacle = [&](std::shared_ptr<Util::GameObject> character, float& dx) {
+            if (dx == 0) return;
+            character->m_Transform.translation.x += dx;
+            if (IsColliding(character, m_Gear)) { character->m_Transform.translation.x -= dx; dx = 0; }
+            else { character->m_Transform.translation.x -= dx; }
+        };
+        handleHorizontalObstacle(m_Ice, iceDx);
+        handleHorizontalObstacle(m_Fire, fireDx);
 
         // 執行最後位移
         m_IceVelocityY -= m_Gravity;
@@ -227,51 +215,51 @@ void App::Update() {
         m_Ice->m_Transform.translation += glm::vec2(iceDx, m_IceVelocityY);
         m_Fire->m_Transform.translation += glm::vec2(fireDx, m_FireVelocityY);
 
-        // 4. 地板與踩箱子碰撞
+        // 4. 地板與頭部碰撞判定 (包含機關阻擋)
         bool iG = false, fG = false;
+        std::vector<std::shared_ptr<Util::GameObject>> collisionGroup = m_Stones;
+        collisionGroup.push_back(m_Box);
+        collisionGroup.push_back(m_Gear);
 
-        // 建立一個臨時列表包含石頭和箱子，統一處理垂直碰撞
-        for (const auto& stone : m_Stones) {
-            float sTop = stone->m_Transform.translation.y + (stone->GetScaledSize().y / 2.0f);
-            if (m_IceVelocityY <= 0 && IsColliding(m_Ice, stone)) {
-                m_IceVelocityY = 0;
-                m_Ice->m_Transform.translation.y = sTop + (m_Ice->GetScaledSize().y / 2.0f);
-                iG = true;
+        for (const auto& obj : collisionGroup) {
+            if (!obj) continue;
+            float objTop = obj->m_Transform.translation.y + (obj->GetScaledSize().y / 2.0f);
+            float objBottom = obj->m_Transform.translation.y - (obj->GetScaledSize().y / 2.0f);
+
+            if (IsColliding(m_Ice, obj)) {
+                // 垂直判定：腳踏 (由上往下掉)
+                if (m_IceVelocityY <= 0 && m_Ice->m_Transform.translation.y > obj->m_Transform.translation.y) {
+                    m_IceVelocityY = 0;
+                    m_Ice->m_Transform.translation.y = objTop + (m_Ice->GetScaledSize().y / 2.0f);
+                    iG = true;
+                } 
+                // 垂直判定：頂頭 (由下往上升) -> 這是新增的邏輯
+                else if (m_IceVelocityY > 0 && m_Ice->m_Transform.translation.y < obj->m_Transform.translation.y) {
+                    m_IceVelocityY = 0;
+                    m_Ice->m_Transform.translation.y = objBottom - (m_Ice->GetScaledSize().y / 2.0f);
+                }
             }
-            if (m_FireVelocityY <= 0 && IsColliding(m_Fire, stone)) {
-                m_FireVelocityY = 0;
-                m_Fire->m_Transform.translation.y = sTop + (m_Fire->GetScaledSize().y / 2.0f);
-                fG = true;
+
+            if (IsColliding(m_Fire, obj)) {
+                if (m_FireVelocityY <= 0 && m_Fire->m_Transform.translation.y > obj->m_Transform.translation.y) {
+                    m_FireVelocityY = 0;
+                    m_Fire->m_Transform.translation.y = objTop + (m_Fire->GetScaledSize().y / 2.0f);
+                    fG = true;
+                }
+                else if (m_FireVelocityY > 0 && m_Fire->m_Transform.translation.y < obj->m_Transform.translation.y) {
+                    m_FireVelocityY = 0;
+                    m_Fire->m_Transform.translation.y = objBottom - (m_Fire->GetScaledSize().y / 2.0f);
+                }
             }
         }
-
-        // 處理踩在箱子上面 (只有 Y 軸速度向下且位置在箱子上方才判定)
-        float bTop = m_Box->m_Transform.translation.y + (m_Box->GetScaledSize().y / 2.0f);
-        if (m_IceVelocityY <= 0 && IsColliding(m_Ice, m_Box) && m_Ice->m_Transform.translation.y > m_Box->m_Transform.translation.y) {
-            m_IceVelocityY = 0;
-            m_Ice->m_Transform.translation.y = bTop + (m_Ice->GetScaledSize().y / 2.0f);
-            iG = true;
-        }
-        if (m_FireVelocityY <= 0 && IsColliding(m_Fire, m_Box) && m_Fire->m_Transform.translation.y > m_Box->m_Transform.translation.y) {
-            m_FireVelocityY = 0;
-            m_Fire->m_Transform.translation.y = bTop + (m_Fire->GetScaledSize().y / 2.0f);
-            fG = true;
-        }
-
         m_IceOnGround = iG; m_FireOnGround = fG;
 
-
-        //機關邏輯
-        bool isPressed = IsColliding(m_Ice, m_Button) || 
-                 IsColliding(m_Fire, m_Button) || 
-                 IsColliding(m_Box, m_Button);
-
+        // 機關邏輯
+        bool isPressed = IsColliding(m_Ice, m_Button) || IsColliding(m_Fire, m_Button) || IsColliding(m_Box, m_Button);
         if (isPressed) {
-            // 按鈕被壓住：按鈕消失（或變色），機關往右移 50px
             m_Button->SetVisible(false);
             m_Gear->m_Transform.translation.x = m_GearOriginalPos.x + 50.0f;
         } else {
-            // 沒有人壓住：按鈕出現，機關回到原位
             m_Button->SetVisible(true);
             m_Gear->m_Transform.translation.x = m_GearOriginalPos.x;
         }
@@ -281,7 +269,6 @@ void App::Update() {
             LoadLevel(m_CurrentLevelNum + 1);
             return;
         }
-
         if (IsColliding(m_Ice, m_Trap) || IsColliding(m_Fire, m_Trap)) {
             m_CurrentState = State::DEAD;
             m_DeadScreen->SetVisible(true);
