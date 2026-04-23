@@ -52,9 +52,9 @@ private:
     std::shared_ptr<Util::GameObject> m_Background;
     std::shared_ptr<Util::GameObject> m_Ice;
     std::shared_ptr<Util::GameObject> m_Fire;
-    std::shared_ptr<Util::GameObject> m_Trap;
-    std::shared_ptr<Util::GameObject> m_IceTrap;  // Ice 碰到會死 (Trap1)
-    std::shared_ptr<Util::GameObject> m_FireTrap; // Fire 碰到會死 (Trap2)
+    std::vector<std::shared_ptr<Util::GameObject>> m_IceTraps;
+    std::vector<std::shared_ptr<Util::GameObject>> m_FireTraps;
+    std::vector<std::shared_ptr<Util::GameObject>> m_Traps;
     std::vector<std::shared_ptr<Util::GameObject>> m_Stones;
     std::shared_ptr<Util::GameObject> m_IceDoor;
     std::shared_ptr<Util::GameObject> m_FireDoor;
@@ -106,8 +106,8 @@ private:
     bool m_IsSwitchOn = false;  // 開關狀態
 
     float m_Gravity = 0.4f;
-    float m_JumpForce = 12.0f;
-    float m_MoveSpeed = 3.0f;
+    float m_JumpForce = 10.0f;
+    float m_MoveSpeed = 5.0f;
     float m_BoxMoveSpeedLimit = 3.0f;
 
     float m_IceVelocityY = 0.0f;

@@ -301,13 +301,43 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
     bool iceDead = false;
     bool fireDead = false;
 
-    // 情況 A：Ice 的死亡判定
-    if (IsColliding(m_Ice, m_Trap)) iceDead = true;
-    if (IsColliding(m_Ice, m_IceTrap)) iceDead = true;
+    // --- 情況 A：Ice 的死亡判定 ---
+    // 1. 檢查【共同陷阱】群 (原本的 m_Trap 改成 m_Traps)
+    for (const auto& trap : m_Traps) {
+        if (IsColliding(m_Ice, trap)) {
+            iceDead = true;
+            break;
+        }
+    }
 
-    // 情況 B：Fire 的死亡判定
-    if (IsColliding(m_Fire, m_Trap)) fireDead = true;
-    if (IsColliding(m_Fire, m_FireTrap)) fireDead = true;
+    // 2. 檢查【Ice 專屬陷阱】群
+    if (!iceDead) {
+        for (const auto& trap : m_IceTraps) {
+            if (IsColliding(m_Ice, trap)) {
+                iceDead = true;
+                break;
+            }
+        }
+    }
+
+    // --- 情況 B：Fire 的死亡判定 ---
+    // 1. 檢查【共同陷阱】群
+    for (const auto& trap : m_Traps) {
+        if (IsColliding(m_Fire, trap)) {
+            fireDead = true;
+            break;
+        }
+    }
+
+    // 2. 檢查【Fire 專屬陷阱】群
+    if (!fireDead) {
+        for (const auto& trap : m_FireTraps) {
+            if (IsColliding(m_Fire, trap)) {
+                fireDead = true;
+                break;
+            }
+        }
+    }
 
     // 執行死亡效果
     if (iceDead || fireDead) {

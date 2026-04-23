@@ -24,12 +24,7 @@ void App::Start() {
     m_Root->AddChild(m_Fire);
 
     // 3. 陷阱與門 (預先載入，LoadLevel 再改位置)
-    m_Trap = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "trap0.png"), -1.0f);
-    m_IceTrap = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "trap1.png"), -1.0f);
-    m_FireTrap = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "trap2.png"), -1.0f);
-    m_Root->AddChild(m_IceTrap);
-    m_Root->AddChild(m_FireTrap);
-    m_Root->AddChild(m_Trap);
+
 
     m_IceDoor = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "ice_door.png"), -2.0f);
     m_FireDoor = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "fire_door.png"), -2.0f);
