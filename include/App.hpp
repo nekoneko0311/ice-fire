@@ -98,11 +98,12 @@ private:
 
 
     //機關
-    std::shared_ptr<Util::GameObject> m_Button;
-    std::shared_ptr<Util::GameObject> m_Gear;
+    std::shared_ptr<Util::GameObject> m_Button;  //按鈕一
+    std::shared_ptr<Util::GameObject> m_Button2; //按鈕二
+    std::shared_ptr<Util::GameObject> m_Gear;    //移動地板
     glm::vec2 m_GearOriginalPos;
-    std::shared_ptr<Util::GameObject> m_Switch;
-    std::shared_ptr<Util::GameObject> m_Gear2;
+    std::shared_ptr<Util::GameObject> m_Switch;  //拉桿
+    std::shared_ptr<Util::GameObject> m_Gear2;   //移動地板二
     glm::vec2 m_Gear2OriginalPos;
     bool m_IsSwitchOn = false;  // 開關狀態
 

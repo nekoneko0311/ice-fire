@@ -276,10 +276,19 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         return overlapX && onTop;
     };
 
-    bool isPressed =
-        (m_Button && IsColliding(m_Ice, m_Button)) ||
-        (m_Button && IsColliding(m_Fire, m_Button)) ||
-        (m_Box && m_Button && IsColliding(m_Box, m_Button));
+    //按鈕一
+    bool button1Pressed =
+    (m_Button && IsColliding(m_Ice, m_Button)) ||
+    (m_Button && IsColliding(m_Fire, m_Button)) ||
+    (m_Box && m_Button && IsColliding(m_Box, m_Button));
+
+    //按鈕二
+    bool button2Pressed =
+        (m_Button2 && IsColliding(m_Ice, m_Button2)) ||
+        (m_Button2 && IsColliding(m_Fire, m_Button2)) ||
+        (m_Box && m_Button2 && IsColliding(m_Box, m_Button2));
+
+    bool isPressed = button1Pressed || button2Pressed;
 
     bool iceOnGear = m_Gear && isStandingOnTop(m_Ice, m_Gear);
     bool fireOnGear = m_Gear && isStandingOnTop(m_Fire, m_Gear);
@@ -288,13 +297,32 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         ? m_Gear->m_Transform.translation
         : glm::vec2(0.0f, 0.0f);
 
+    if (m_Button) {
+        m_Button->SetVisible(!button1Pressed);
+    }
+    if (m_Button2) {
+        m_Button2->SetVisible(!button2Pressed);
+    }
+
+    //移動地板
     if (m_Gear) {
-        if (isPressed) {
-            if (m_Button) m_Button->SetVisible(false);
-            m_Gear->m_Transform.translation.y = m_GearOriginalPos.y + 50.0f;   // 往上移
-        } else {
-            if (m_Button) m_Button->SetVisible(true);
-            m_Gear->m_Transform.translation.y = m_GearOriginalPos.y;            // 回原位
+        float targetY = isPressed
+            ? (m_GearOriginalPos.y + 50.0f)  // 移動距離
+            : m_GearOriginalPos.y;
+
+        float speed = 2.0f; //移動速度
+
+        if (m_Gear->m_Transform.translation.y < targetY) {
+            m_Gear->m_Transform.translation.y += speed;
+            if (m_Gear->m_Transform.translation.y > targetY) {
+                m_Gear->m_Transform.translation.y = targetY;
+            }
+        }
+        else if (m_Gear->m_Transform.translation.y > targetY) {
+            m_Gear->m_Transform.translation.y -= speed;
+            if (m_Gear->m_Transform.translation.y < targetY) {
+                m_Gear->m_Transform.translation.y = targetY;
+            }
         }
     }
 
@@ -302,11 +330,17 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         ? (m_Gear->m_Transform.translation - oldGearPos)
         : glm::vec2(0.0f, 0.0f);
 
-    if (iceOnGear) {
-        m_Ice->m_Transform.translation += gearDelta;
-    }
-    if (fireOnGear) {
-        m_Fire->m_Transform.translation += gearDelta;
+    if (gearDelta.x != 0.0f || gearDelta.y != 0.0f) {
+        if (iceOnGear) {
+            m_Ice->m_Transform.translation += gearDelta;
+            m_IceVelocityY = 0.0f;
+            m_IceOnGround = true;
+        }
+        if (fireOnGear) {
+            m_Fire->m_Transform.translation += gearDelta;
+            m_FireVelocityY = 0.0f;
+            m_FireOnGround = true;
+        }
     }
 
     //door
@@ -353,10 +387,10 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
     // 根據拉桿狀態移動 Gear2（上下）
     if (m_Gear2) {
         float targetY = m_IsSwitchOn
-            ? (m_Gear2OriginalPos.y + 50.0f)
+            ? (m_Gear2OriginalPos.y + 50.0f)  //移動距離
             : m_Gear2OriginalPos.y;
 
-        float speed = 2.0f;
+        float speed = 2.0f;  //移動速度
 
         if (m_Gear2->m_Transform.translation.y < targetY) {
             m_Gear2->m_Transform.translation.y += speed;

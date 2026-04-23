@@ -47,6 +47,10 @@ void App::LoadLevel(int level) {
         m_Button->m_Transform.translation = { 150.0f, -185.0f };
         m_Root->AddChild(m_Button);
 
+        m_Button2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.0f);
+        m_Button2->m_Transform.translation = {200.0f, -185.0f}; // 換位置
+        m_Root->AddChild(m_Button2);
+
         m_Gear = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
         m_Gear->m_Transform.translation = { 400.0f, -100.0f };
         m_GearOriginalPos = m_Gear->m_Transform.translation;
