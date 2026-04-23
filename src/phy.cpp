@@ -8,18 +8,28 @@
 #include "slope.hpp"
 
 
-bool App::IsColliding(const std::shared_ptr<Util::GameObject>& p, const std::shared_ptr<Util::GameObject>& t) {
+bool App::IsColliding(const std::shared_ptr<Util::GameObject>& p,
+                      const std::shared_ptr<Util::GameObject>& t) {
+    if (!p || !t) return false;
 
     glm::vec2 pP = p->m_Transform.translation;
     glm::vec2 pS = p->GetScaledSize();
     glm::vec2 tP = t->m_Transform.translation;
     glm::vec2 tS = t->GetScaledSize();
 
-    // AABB 碰撞演算法 (保留你原始的 2.1f 修正係數)
-    return (pP.x - pS.x / 2.1f < tP.x + tS.x / 2.0f &&
-            pP.x + pS.x / 2.1f > tP.x - tS.x / 2.0f &&
-            pP.y - pS.y / 2.0f < tP.y + tS.y / 2.0f &&
-            pP.y + pS.y / 2.0f > tP.y - tS.y / 2.0f);
+    float pW = pS.x;
+    float pH = pS.y;
+    float tW = tS.x;
+    float tH = tS.y;
+
+    // gear2 圖轉了 90 度，碰撞箱寬高也要交換
+    if (p == m_Gear2) std::swap(pW, pH);
+    if (t == m_Gear2) std::swap(tW, tH);
+
+    return (pP.x - pW / 2.0f < tP.x + tW / 2.0f &&
+            pP.x + pW / 2.0f > tP.x - tW / 2.0f &&
+            pP.y - pH / 2.0f < tP.y + tH / 2.0f &&
+            pP.y + pH / 2.0f > tP.y - tH / 2.0f);
 }
 
 void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
@@ -112,12 +122,17 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
     if (m_Gear2) collisionGroup.push_back(m_Gear2);
 
     for (const auto& obj : collisionGroup) {
-    if (!obj) continue;
+        float objW = obj->GetScaledSize().x;
+        float objH = obj->GetScaledSize().y;
 
-    float objLeft   = obj->m_Transform.translation.x - (obj->GetScaledSize().x / 2.0f);
-    float objRight  = obj->m_Transform.translation.x + (obj->GetScaledSize().x / 2.0f);
-    float objTop    = obj->m_Transform.translation.y + (obj->GetScaledSize().y / 2.0f);
-    float objBottom = obj->m_Transform.translation.y - (obj->GetScaledSize().y / 2.0f);
+        if (obj == m_Gear2) {
+            std::swap(objW, objH);
+        }
+
+        float objLeft   = obj->m_Transform.translation.x - (objW / 2.0f);
+        float objRight  = obj->m_Transform.translation.x + (objW / 2.0f);
+        float objTop    = obj->m_Transform.translation.y + (objH / 2.0f);
+        float objBottom = obj->m_Transform.translation.y - (objH / 2.0f);
 
     // ===== Ice =====
     if (IsColliding(m_Ice, obj)) {
@@ -201,14 +216,131 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
     ApplySlopeToPlayer(m_Ice, m_IceVelocityY, m_IceOnGround, iceDx);
     ApplySlopeToPlayer(m_Fire, m_FireVelocityY, m_FireOnGround, fireDx);
 
+    std::vector<std::shared_ptr<Util::GameObject>> boxCollisionGroup = m_Stones;
+    if (m_Gear) boxCollisionGroup.push_back(m_Gear);
+    if (m_Gear2) boxCollisionGroup.push_back(m_Gear2);
+
+    if (m_Box) {
+        m_BoxOnGround = false;
+
+        // 重力
+        m_BoxVelocityY -= m_Gravity;
+        m_Box->m_Transform.translation.y += m_BoxVelocityY;
+
+        for (const auto &obj: boxCollisionGroup) {
+            if (!obj) continue;
+
+            if (IsColliding(m_Box, obj)) {
+                float objTop = obj->m_Transform.translation.y + obj->GetScaledSize().y / 2.0f;
+                float objBottom = obj->m_Transform.translation.y - obj->GetScaledSize().y / 2.0f;
+                float boxHalfH = m_Box->GetScaledSize().y / 2.0f;
+
+                if (m_BoxVelocityY <= 0.0f &&
+                    m_Box->m_Transform.translation.y > obj->m_Transform.translation.y) {
+                    // 落地
+                    m_Box->m_Transform.translation.y = objTop + boxHalfH;
+                    m_BoxVelocityY = 0.0f;
+                    m_BoxOnGround = true;
+                } else if (m_BoxVelocityY > 0.0f &&
+                           m_Box->m_Transform.translation.y < obj->m_Transform.translation.y) {
+                    // 頂頭
+                    m_Box->m_Transform.translation.y = objBottom - boxHalfH;
+                    m_BoxVelocityY = 0.0f;
+                }
+            }
+        }
+    }
+
+
     // 機關邏輯
-    bool isPressed = IsColliding(m_Ice, m_Button) || IsColliding(m_Fire, m_Button) || (m_Box && IsColliding(m_Box, m_Button));
-    if (isPressed) {
-        m_Button->SetVisible(false);
-        m_Gear->m_Transform.translation.x = m_GearOriginalPos.x + 50.0f;
-    } else {
-        m_Button->SetVisible(true);
-        m_Gear->m_Transform.translation.x = m_GearOriginalPos.x;
+    auto isStandingOnTop = [&](std::shared_ptr<Util::GameObject> character,
+                               std::shared_ptr<Util::GameObject> platform) {
+        if (!character || !platform) return false;
+
+        float charHalfW = character->GetScaledSize().x / 2.0f;
+        float charHalfH = character->GetScaledSize().y / 2.0f;
+        float platHalfW = platform->GetScaledSize().x / 2.0f;
+        float platHalfH = platform->GetScaledSize().y / 2.0f;
+
+        float charLeft = character->m_Transform.translation.x - charHalfW;
+        float charRight = character->m_Transform.translation.x + charHalfW;
+        float charBottom = character->m_Transform.translation.y - charHalfH;
+
+        float platLeft = platform->m_Transform.translation.x - platHalfW;
+        float platRight = platform->m_Transform.translation.x + platHalfW;
+        float platTop = platform->m_Transform.translation.y + platHalfH;
+
+        bool overlapX = (charRight > platLeft) && (charLeft < platRight);
+        bool onTop = std::abs(charBottom - platTop) < 5.0f;
+
+        return overlapX && onTop;
+    };
+
+    //按鈕一
+    bool button1Pressed =
+    (m_Button && IsColliding(m_Ice, m_Button)) ||
+    (m_Button && IsColliding(m_Fire, m_Button)) ||
+    (m_Box && m_Button && IsColliding(m_Box, m_Button));
+
+    //按鈕二
+    bool button2Pressed =
+        (m_Button2 && IsColliding(m_Ice, m_Button2)) ||
+        (m_Button2 && IsColliding(m_Fire, m_Button2)) ||
+        (m_Box && m_Button2 && IsColliding(m_Box, m_Button2));
+
+    bool isPressed = button1Pressed || button2Pressed;
+
+    bool iceOnGear = m_Gear && isStandingOnTop(m_Ice, m_Gear);
+    bool fireOnGear = m_Gear && isStandingOnTop(m_Fire, m_Gear);
+
+    glm::vec2 oldGearPos = m_Gear
+        ? m_Gear->m_Transform.translation
+        : glm::vec2(0.0f, 0.0f);
+
+    if (m_Button) {
+        m_Button->SetVisible(!button1Pressed);
+    }
+    if (m_Button2) {
+        m_Button2->SetVisible(!button2Pressed);
+    }
+
+    //移動地板
+    if (m_Gear) {
+        float targetY = isPressed
+            ? (m_GearOriginalPos.y - 60.0f)  // 移動距離
+            : m_GearOriginalPos.y;
+
+        float speed = 2.0f; //移動速度
+
+        if (m_Gear->m_Transform.translation.y < targetY) {
+            m_Gear->m_Transform.translation.y += speed;
+            if (m_Gear->m_Transform.translation.y > targetY) {
+                m_Gear->m_Transform.translation.y = targetY;
+            }
+        }
+        else if (m_Gear->m_Transform.translation.y > targetY) {
+            m_Gear->m_Transform.translation.y -= speed;
+            if (m_Gear->m_Transform.translation.y < targetY) {
+                m_Gear->m_Transform.translation.y = targetY;
+            }
+        }
+    }
+
+    glm::vec2 gearDelta = m_Gear
+        ? (m_Gear->m_Transform.translation - oldGearPos)
+        : glm::vec2(0.0f, 0.0f);
+
+    if (gearDelta.x != 0.0f || gearDelta.y != 0.0f) {
+        if (iceOnGear) {
+            m_Ice->m_Transform.translation += gearDelta;
+            m_IceVelocityY = 0.0f;
+            m_IceOnGround = true;
+        }
+        if (fireOnGear) {
+            m_Fire->m_Transform.translation += gearDelta;
+            m_FireVelocityY = 0.0f;
+            m_FireOnGround = true;
+        }
     }
 
     //door
@@ -241,12 +373,56 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
     handleSwitch(m_Ice, iceDx, true);
     handleSwitch(m_Fire, fireDx, false);
 
+    // 先判斷角色有沒有站在 Gear2 上
+    bool iceOnGear2 = m_Gear2 && isStandingOnTop(m_Ice, m_Gear2);
+    bool fireOnGear2 = m_Gear2 && isStandingOnTop(m_Fire, m_Gear2);
 
-    // 根據拉桿狀態移動 Gear2
-    if (m_IsSwitchOn) {
-        m_Gear2->m_Transform.translation.x = m_Gear2OriginalPos.x - 50.0f;
-    } else {
-        m_Gear2->m_Transform.translation.x = m_Gear2OriginalPos.x;
+
+
+    // 記錄 Gear2 舊位置
+    glm::vec2 oldGear2Pos = m_Gear2
+        ? m_Gear2->m_Transform.translation
+        : glm::vec2(0.0f, 0.0f);
+
+    // 根據拉桿狀態移動 Gear2（上下）
+    if (m_Gear2) {
+        float targetY = m_IsSwitchOn
+            ? (m_Gear2OriginalPos.y - 75.0f)  //移動距離
+            : m_Gear2OriginalPos.y;
+
+        float speed = 2.0f;  //移動速度
+
+        if (m_Gear2->m_Transform.translation.y < targetY) {
+            m_Gear2->m_Transform.translation.y += speed;
+            if (m_Gear2->m_Transform.translation.y > targetY) {
+                m_Gear2->m_Transform.translation.y = targetY;
+            }
+        }
+        else if (m_Gear2->m_Transform.translation.y > targetY) {
+            m_Gear2->m_Transform.translation.y -= speed;
+            if (m_Gear2->m_Transform.translation.y < targetY) {
+                m_Gear2->m_Transform.translation.y = targetY;
+            }
+        }
+    }
+
+    // 算這幀移動量
+    glm::vec2 gear2Delta = m_Gear2
+        ? (m_Gear2->m_Transform.translation - oldGear2Pos)
+        : glm::vec2(0.0f, 0.0f);
+
+    // 只有真的有移動才帶角色
+    if (gear2Delta.x != 0.0f || gear2Delta.y != 0.0f) {
+        if (iceOnGear2) {
+            m_Ice->m_Transform.translation += gear2Delta;
+            m_IceVelocityY = 0.0f;
+            m_IceOnGround = true;
+        }
+        if (fireOnGear2) {
+            m_Fire->m_Transform.translation += gear2Delta;
+            m_FireVelocityY = 0.0f;
+            m_FireOnGround = true;
+        }
     }
 
     // 控制開關

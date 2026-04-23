@@ -162,7 +162,7 @@ void App::LoadLevel(int level) {
         float sh = tempStone->GetScaledSize().y;
 
         // --- 區域 1：X(-399~100), Y(134~157), 13x2 的方塊 ---
-        for (int j = 0; j < 2; ++j) { // Y 軸 2 層
+        for (int j = 1; j < 2; ++j) { // Y 軸 2 層
             for (int i = 0; i < 13; ++i) { // X 軸 13 顆
                 auto stone = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "stone1.png"), -1.0f);
                 stone->m_Transform.translation = { -399.0f + (i * sw), 134.0f + (j * sh) };
@@ -233,8 +233,12 @@ void App::LoadLevel(int level) {
 
 
         m_Button = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
-        m_Button->m_Transform.translation = { 150.0f, -185.0f };
+        m_Button->m_Transform.translation = { -400.0f, -10.0f };
         m_Root->AddChild(m_Button);
+
+        m_Button2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.0f);
+        m_Button2->m_Transform.translation = { 150.0f, 130.0f}; // 換位置
+        m_Root->AddChild(m_Button2);
 
         m_Gear = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
         m_Gear->m_Transform.translation = { 567.0f, 65.0f };
@@ -242,9 +246,14 @@ void App::LoadLevel(int level) {
         m_Root->AddChild(m_Gear);
 
         if (!m_Box) {
-            m_Box = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "box.png"), 0.1f);
+            m_Box = std::make_shared<Util::GameObject>(
+                std::make_shared<Util::Image>(PIC_PATH + "box.png"), 0.1f
+            );
             m_Root->AddChild(m_Box);
         }
+        m_BoxVelocityY = 0.0f;
+        m_BoxOnGround = false;
+
         m_Box->m_Transform.translation = { -31.0f, 140.0f };
 
         // --- 4. 拉桿、鑽石 ---
@@ -255,6 +264,7 @@ void App::LoadLevel(int level) {
         m_Gear2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
         m_Gear2->m_Transform.translation = { -580.0f, -27.0f };
         m_Gear2OriginalPos = m_Gear2->m_Transform.translation;
+        m_Gear2->m_Transform.rotation = glm::radians(-90.0f);   // 轉 90 度
         m_Root->AddChild(m_Gear2);
 
         //鑽石初始化
@@ -263,10 +273,8 @@ void App::LoadLevel(int level) {
         // --- 5. 斜坡 ---
         //AddSlope(PIC_PATH + "l_tri.png", {500.0f, -179.0f}, {1.2f, 1.2f}, {-14.0f, -14.0f}, {14.0f, 14.0f}, 0.2f, 0.2f, true);
         //AddSlope(PIC_PATH + "r_tri.png", {100.0f, -179.0f}, {1.2f, 1.2f}, {-14.0f, 14.0f}, {14.0f, -14.0f}, 0.2f, 0.1f, true);
+
     }
-
-
-
 }
 
 void App::ClearLevel() {

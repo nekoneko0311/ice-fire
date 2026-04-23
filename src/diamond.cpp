@@ -5,7 +5,7 @@ void App::InitDiamonds() {
     m_RedDiamond = std::make_shared<Util::GameObject>(
         std::make_shared<Util::Image>(PIC_PATH + "r_diamond.png"), -1.0f
     );
-    m_RedDiamond->m_Transform.translation = { -150.0f, -50.0f };
+    m_RedDiamond->m_Transform.translation = { -250.0f, -100.0f };
     m_RedDiamond->m_Transform.scale = { 0.6f, 0.6f };
     m_RedDiamondBasePos = m_RedDiamond->m_Transform.translation;
     m_RedDiamondCollected = false;
@@ -15,7 +15,7 @@ void App::InitDiamonds() {
     m_BlueDiamond = std::make_shared<Util::GameObject>(
         std::make_shared<Util::Image>(PIC_PATH + "b_diamond.png"), -1.0f
     );
-    m_BlueDiamond->m_Transform.translation = { 150.0f, -50.0f };
+    m_BlueDiamond->m_Transform.translation = { -300.0f, -100.0f };
     m_BlueDiamond->m_Transform.scale = { 0.6f, 0.6f };
     m_BlueDiamondBasePos = m_BlueDiamond->m_Transform.translation;
     m_BlueDiamondCollected = false;

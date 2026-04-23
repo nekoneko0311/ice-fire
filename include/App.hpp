@@ -60,6 +60,7 @@ private:
     std::shared_ptr<Util::GameObject> m_FireDoor;
     std::shared_ptr<Util::GameObject> m_Box;                //箱子
 
+
     // ===== 新增：門動畫 =====
     std::vector<std::string> m_IceDoorFrames;
     std::vector<std::string> m_FireDoorFrames;
@@ -97,17 +98,18 @@ private:
 
 
     //機關
-    std::shared_ptr<Util::GameObject> m_Button;
-    std::shared_ptr<Util::GameObject> m_Gear;
+    std::shared_ptr<Util::GameObject> m_Button;  //按鈕一
+    std::shared_ptr<Util::GameObject> m_Button2; //按鈕二
+    std::shared_ptr<Util::GameObject> m_Gear;    //移動地板
     glm::vec2 m_GearOriginalPos;
-    std::shared_ptr<Util::GameObject> m_Switch;
-    std::shared_ptr<Util::GameObject> m_Gear2;
+    std::shared_ptr<Util::GameObject> m_Switch;  //拉桿
+    std::shared_ptr<Util::GameObject> m_Gear2;   //移動地板二
     glm::vec2 m_Gear2OriginalPos;
     bool m_IsSwitchOn = false;  // 開關狀態
 
     float m_Gravity = 0.4f;
     float m_JumpForce = 10.0f;
-    float m_MoveSpeed = 5.0f;
+    float m_MoveSpeed = 7.0f;
     float m_BoxMoveSpeedLimit = 3.0f;
 
     float m_IceVelocityY = 0.0f;
