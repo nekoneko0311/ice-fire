@@ -126,10 +126,9 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
     handleAdvancedPush();
     auto handleHorizontalObstacle = [&](std::shared_ptr<Util::GameObject> character, float& dx) {
         if (dx == 0) return;
-        character->m_Transform.translation.x += dx;
+        character->m_Transform.translation.x += dx; // 先移動
         
         bool hitGear = false;
-        // 改為遍歷向量 m_Gears
         for (auto& gear : m_Gears) {
             if (IsColliding(character, gear)) {
                 hitGear = true;
@@ -138,12 +137,31 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         }
 
         if (hitGear) {
-            character->m_Transform.translation.x -= dx;
+            character->m_Transform.translation.x -= dx; // 撞到機關才退回
             dx = 0;
-        } else {
-            character->m_Transform.translation.x -= dx;
-        }
+        } 
+        // 【修正】把原本不管怎樣都減回來的 else 整段刪除！沒撞到就不動它！
     };
+    // auto handleHorizontalObstacle = [&](std::shared_ptr<Util::GameObject> character, float& dx) {
+    //     if (dx == 0) return;
+    //     character->m_Transform.translation.x += dx;
+        
+    //     bool hitGear = false;
+    //     // 改為遍歷向量 m_Gears
+    //     for (auto& gear : m_Gears) {
+    //         if (IsColliding(character, gear)) {
+    //             hitGear = true;
+    //             break;
+    //         }
+    //     }
+
+    //     if (hitGear) {
+    //         character->m_Transform.translation.x -= dx;
+    //         dx = 0;
+    //     } else {
+    //         character->m_Transform.translation.x -= dx;
+    //     }
+    // };
     handleHorizontalObstacle(m_Ice, iceDx);
     handleHorizontalObstacle(m_Fire, fireDx);
 
