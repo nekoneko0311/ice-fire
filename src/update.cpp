@@ -40,11 +40,19 @@ void App::Update() {
         m_Root->Update(); return;
     }
 
+    //暫停&恢復
     if (Util::Input::IsKeyDown(Util::Keycode::ESCAPE)) {
         m_CurrentState = (m_CurrentState == State::UPDATE) ? State::PAUSE : State::UPDATE;
         m_PauseScreen->SetVisible(m_CurrentState == State::PAUSE);
     }
     if (m_CurrentState == State::PAUSE) { m_Root->Update(); return; }
+
+    //跳關
+    if (Util::Input::IsKeyDown(Util::Keycode::N)) {
+        m_CurrentLevelNum++;
+        LoadLevel(m_CurrentLevelNum);
+        return;
+    }
 
     // 2. 正常遊戲邏輯
     const Uint8* keys = SDL_GetKeyboardState(NULL);

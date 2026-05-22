@@ -12,21 +12,13 @@ void App::LoadLevel(int level) {
     m_CurrentLevelNum = level;
     m_Score = 0;
     srand(time(NULL));
-    // 判斷是否為要載入地圖檔的關卡
+    const float TILE_SIZE = 23.0f;
+    const int MAP_WIDTH = 39;
+    const int MAP_HEIGHT = 29;
+    std::string mapPath = "../resources/map/level" + std::to_string(level) + ".txt";
+    float startX = -437.0f;
+    float startY = 322.0f;
     if (level == 1 || level == 2) {
-        // --- 2. 定義地圖參數 ---
-        const float TILE_SIZE = 23.0f;
-        const int MAP_WIDTH = 39;
-        const int MAP_HEIGHT = 29;
-        std::string mapPath = "../resources/map/level" + std::to_string(level) + ".txt";
-
-        // 計算左上角起始座標 (視窗 897*667，格子 23*23)
-        // 寬度中心偏移: -897/2 + 23/2 = -437
-        // 高度中心偏移:  667/2 - 23/2 =  322
-        float startX = -437.0f;
-        float startY = 322.0f;
-
-        // --- 3. 開啟並讀取檔案 ---
         std::ifstream file(mapPath);
         if (!file.is_open()) {
             printf("Failed to open map file: %s\n", mapPath.c_str());
