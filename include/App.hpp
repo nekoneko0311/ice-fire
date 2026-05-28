@@ -18,6 +18,7 @@
 #include "fan.h"
 #include "Util/Animation.hpp"
 #include "chainPlatform.h"
+#include "BalanceRopePlatform.h"
 
 const std::string PIC_PATH = "../Resources/picture/";
 const std::string FONT_PATH = "../Resources/font/";
@@ -175,6 +176,11 @@ private:
     std::shared_ptr<ChainPlatform> m_ChainPlatform;
     //=====================================================================
 
+
+    //比重量=================================
+    std::shared_ptr<BalanceRopePlatform> m_BalanceRopePlatform;
+
+    //======================================
 
 
     //斜坡=================================================
