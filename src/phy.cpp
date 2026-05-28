@@ -296,6 +296,39 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         m_ChainPlatform->Update(0.0166f);
     }
 
+    if (m_ChainPlatform2) {
+        m_ChainPlatform2->BeginFrame();
+
+        glm::vec2 icePos = m_Ice->m_Transform.translation;
+        glm::vec2 firePos = m_Fire->m_Transform.translation;
+
+        bool iceOnChain = m_ChainPlatform2->CheckCollisionWithPlayer(
+            m_Ice->m_Transform.translation,
+            icePos,
+            m_Ice->GetScaledSize(),
+            m_IceVelocityY
+        );
+
+        bool fireOnChain = m_ChainPlatform2->CheckCollisionWithPlayer(
+            m_Fire->m_Transform.translation,
+            firePos,
+            m_Fire->GetScaledSize(),
+            m_FireVelocityY
+        );
+
+        m_Ice->m_Transform.translation = icePos;
+        m_Fire->m_Transform.translation = firePos;
+
+        if (iceOnChain) {
+            iG = true;
+        }
+
+        if (fireOnChain) {
+            fG = true;
+        }
+
+        m_ChainPlatform2->Update(0.0166f);
+    }
 
     // ===== 比重量平台：冰人、火人 =====
     if (m_BalanceRopePlatform) {

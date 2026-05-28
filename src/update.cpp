@@ -151,27 +151,34 @@ void App::UpdateAnimations() {
         }
     }
 
-    //陷阱動畫
+    // 陷阱動畫
     m_TrapAnimCounter++;
     if (m_TrapAnimCounter >= m_TrapAnimSpeed) {
         m_TrapAnimCounter = 0;
+        m_TrapFrameIndex++;
 
-        // 更新當前動畫幀索引 (0~9 循環)
-        m_TrapFrameIndex = (m_TrapFrameIndex + 1) % 10;
+        if (!m_IceTrapFrames.empty()) {
+            int iceIndex = m_TrapFrameIndex % m_IceTrapFrames.size();
 
-        // 更新所有冰陷阱的圖片
-        for (auto& trap : m_IceTraps) {
-            trap->SetDrawable(std::make_shared<Util::Image>(m_IceTrapFrames[m_TrapFrameIndex]));
+            for (auto& trap : m_IceTraps) {
+                trap->SetDrawable(std::make_shared<Util::Image>(m_IceTrapFrames[iceIndex]));
+            }
         }
 
-        // 更新所有火陷阱的圖片
-        for (auto& trap : m_FireTraps) {
-            trap->SetDrawable(std::make_shared<Util::Image>(m_FireTrapFrames[m_TrapFrameIndex]));
+        if (!m_FireTrapFrames.empty()) {
+            int fireIndex = m_TrapFrameIndex % m_FireTrapFrames.size();
+
+            for (auto& trap : m_FireTraps) {
+                trap->SetDrawable(std::make_shared<Util::Image>(m_FireTrapFrames[fireIndex]));
+            }
         }
 
-        // 更新所有普通陷阱的圖片
-        for (auto& trap : m_Traps) {
-            trap->SetDrawable(std::make_shared<Util::Image>(m_TrapFrames[m_TrapFrameIndex]));
+        if (!m_TrapFrames.empty()) {
+            int trapIndex = m_TrapFrameIndex % m_TrapFrames.size();
+
+            for (auto& trap : m_Traps) {
+                trap->SetDrawable(std::make_shared<Util::Image>(m_TrapFrames[trapIndex]));
+            }
         }
     }
 

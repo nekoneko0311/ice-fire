@@ -9,8 +9,24 @@
 
 void App::LoadLevel(int level) {
     ClearLevel();
+
     m_CurrentLevelNum = level;
     m_Score = 0;
+
+    m_CurrentState = State::UPDATE;
+    m_DeadScreen->SetVisible(false);
+    m_PauseScreen->SetVisible(false);
+
+    m_GameTime = 0.0f;
+
+    m_IceVelocityY = 0.0f;
+    m_FireVelocityY = 0.0f;
+    m_BoxVelocityY = 0.0f;
+
+    m_IceOnGround = false;
+    m_FireOnGround = false;
+    m_BoxOnGround = false;
+
     srand(time(NULL));
     const float TILE_SIZE = 23.0f;
     const int MAP_WIDTH = 39;
@@ -53,7 +69,7 @@ void App::LoadLevel(int level) {
                 m_Stones.push_back(stone);
                 m_Root->AddChild(stone);
                 auto trap = std::make_shared<Util::GameObject>(
-                    std::make_shared<Util::Image>(PIC_PATH + "trap1.png"), -1.0f
+                    std::make_shared<Util::Image>(PIC_PATH + "ice_traps/1.png"), -1.0f
                 );
                 trap->m_Transform.translation = { posX, posY + 4.0f };
                 m_IceTraps.push_back(trap);
@@ -67,7 +83,7 @@ void App::LoadLevel(int level) {
                 m_Stones.push_back(stone);
                 m_Root->AddChild(stone);
                 auto trap = std::make_shared<Util::GameObject>(
-                    std::make_shared<Util::Image>(PIC_PATH + "trap2.png"), -1.0f
+                    std::make_shared<Util::Image>(PIC_PATH + "fire_traps/1.png"), -1.0f
                 );
                 trap->m_Transform.translation = { posX, posY };
                 m_FireTraps.push_back(trap);
@@ -81,7 +97,7 @@ void App::LoadLevel(int level) {
                 m_Stones.push_back(stone);
                 m_Root->AddChild(stone);
                 auto trap = std::make_shared<Util::GameObject>(
-                    std::make_shared<Util::Image>(PIC_PATH + "trap.png"), -1.0f
+                    std::make_shared<Util::Image>(PIC_PATH + "traps/1.png"), -1.0f
                 );
                 trap->m_Transform.translation = { posX, posY };
                 m_Traps.push_back(trap);
@@ -208,8 +224,8 @@ void App::LoadLevel(int level) {
         m_IceVelocityY = 0;
         m_FireVelocityY = 0;
 
-        m_IceDoor->m_Transform.translation = { 370.0f, 240.0f };
-        m_FireDoor->m_Transform.translation = { 300.0f, 240.0f };
+        m_IceDoor->m_Transform.translation = { -325.0f, 270.0f };
+        m_FireDoor->m_Transform.translation = { -400.0f, 270.0f };
 
         m_IceDoorFrameIndex = 0;
         m_FireDoorFrameIndex = 0;
@@ -253,57 +269,43 @@ void App::LoadLevel(int level) {
         m_GearOriginalPositions.push_back(gear2->m_Transform.translation);
         m_Root->AddChild(gear2);
 
+        // --- 鐵鍊旋轉平台 ---
+        m_ChainPlatform = std::make_shared<ChainPlatform>(
+        PIC_PATH + "Lift1.png",   // 鐵鍊圖片
+        PIC_PATH + "Lift2.png",   // 平台圖片
+        glm::vec2(150.0f, 73.0f),    // 鐵鍊位置
+        glm::vec2(150.0f, 20.0f),     // 平台位置
 
-        // ============= 比重量平台 ==================
-        if (level == 1) {
-            m_BalanceRopePlatform = std::make_shared<BalanceRopePlatform>(
-                PIC_PATH + "wood.png",
-                PIC_PATH + "chain_left.png",
-                PIC_PATH + "chain_link.png",
-                PIC_PATH + "wheel.png",
+        glm::vec2(0.4f, 0.4f),      // 鐵鍊縮放
+        glm::vec2(0.7f, 0.5f),      // 平台縮放
 
-                glm::vec2(-100.0f, -30.0f), // 整組位置，X 越小越左
-                250.0f,                     // 左右平台距離中心
-                -250.0f,                    // 木板平衡時 Y
-                100.0f,                     // 輪子 Y，越大鏈越長
+        160.0f,                     // 平台碰撞寬度
+        12.0f                       // 平台碰撞高度，先用 12 比較貼圖
+        );
 
-                130.0f,                     // 木板碰撞寬
-                18.0f,                      // 木板碰撞高
-                -300.0f,                    // 最低 Y，越小掉越低
+        m_ChainPlatform->SetRotation(0.0f);
 
-                glm::vec2(0.55f, 0.55f),    // 木板 scale
-                glm::vec2(0.55f, 0.55f),    // V 鏈 scale
-                glm::vec2(0.45f, 0.45f),    // 小鏈節 scale
-                glm::vec2(0.45f, 0.45f)     // 輪子 scale
-            );
-
-            for (auto& obj : m_BalanceRopePlatform->GetAllObjects()) {
-                m_Root->AddChild(obj);
-            }
-        }
+        m_Root->AddChild(m_ChainPlatform->GetChainObject());
+        m_Root->AddChild(m_ChainPlatform->GetBoardObject());
 
         // --- 鐵鍊旋轉平台 ---
-        if(level == 1) {
-            m_ChainPlatform = std::make_shared<ChainPlatform>(
-                PIC_PATH + "Lift(1).png",   // 鐵鍊圖片
-                PIC_PATH + "Lift(2).png",   // 平台圖片
+        m_ChainPlatform2 = std::make_shared<ChainPlatform>(
+        PIC_PATH + "Lift1.png",   // 鐵鍊圖片
+        PIC_PATH + "Lift2.png",   // 平台圖片
+        glm::vec2(-150.0f, 73.0f),    // 鐵鍊位置
+        glm::vec2(-150.0f, 20.0f),     // 平台位置
 
-                glm::vec2(150.0f, -100.0f),    // 鐵鍊位置
-                glm::vec2(150.0f, -140.0f),     // 平台位置
+        glm::vec2(0.4f, 0.4f),      // 鐵鍊縮放
+        glm::vec2(0.7f, 0.5f),      // 平台縮放
 
-                glm::vec2(0.3f, 0.3f),      // 鐵鍊縮放
-                glm::vec2(0.3f, 0.3f),      // 平台縮放
+        160.0f,                     // 平台碰撞寬度
+        12.0f                       // 平台碰撞高度，先用 12 比較貼圖
+        );
 
-                160.0f,                     // 平台碰撞寬度
-                12.0f                       // 平台碰撞高度，先用 12 比較貼圖
-            );
+        m_ChainPlatform->SetRotation(0.0f);
 
-            m_ChainPlatform->SetRotation(0.0f);
-
-            m_Root->AddChild(m_ChainPlatform->GetChainObject());
-            m_Root->AddChild(m_ChainPlatform->GetBoardObject());
-        }
-
+        m_Root->AddChild(m_ChainPlatform2->GetChainObject());
+        m_Root->AddChild(m_ChainPlatform2->GetBoardObject());
         
         // --- 5. 拉桿 (Switches) ---
         auto sw = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
@@ -395,27 +397,33 @@ void App::LoadLevel(int level) {
         m_Root->AddChild(gear2);
 
 
-        // --- 鐵鍊旋轉平台 ---
-        if(level == 1) {
-            m_ChainPlatform = std::make_shared<ChainPlatform>(
-                PIC_PATH + "Lift(1).png",   // 鐵鍊圖片
-                PIC_PATH + "Lift(2).png",   // 平台圖片
+        // ============= 比重量平台 ==================
 
-                glm::vec2(150.0f, -100.0f),    // 鐵鍊位置
-                glm::vec2(150.0f, -140.0f),     // 平台位置
+        m_BalanceRopePlatform = std::make_shared<BalanceRopePlatform>(
+        PIC_PATH + "wood.png",
+        PIC_PATH + "chain_left.png",
+        PIC_PATH + "chain_link.png",
+        PIC_PATH + "wheel.png",
 
-                glm::vec2(0.3f, 0.3f),      // 鐵鍊縮放
-                glm::vec2(0.3f, 0.3f),      // 平台縮放
+        glm::vec2(-100.0f, -30.0f), // 整組位置，X 越小越左
+        250.0f,                     // 左右平台距離中心
+        -250.0f,                    // 木板平衡時 Y
+        100.0f,                     // 輪子 Y，越大鏈越長
 
-                160.0f,                     // 平台碰撞寬度
-                12.0f                       // 平台碰撞高度，先用 12 比較貼圖
-            );
+        130.0f,                     // 木板碰撞寬
+        18.0f,                      // 木板碰撞高
+        -300.0f,                    // 最低 Y，越小掉越低
 
-            m_ChainPlatform->SetRotation(0.0f);
+        glm::vec2(0.55f, 0.55f),    // 木板 scale
+        glm::vec2(0.55f, 0.55f),    // V 鏈 scale
+        glm::vec2(0.45f, 0.45f),    // 小鏈節 scale
+        glm::vec2(0.45f, 0.45f)     // 輪子 scale
+        );
 
-            m_Root->AddChild(m_ChainPlatform->GetChainObject());
-            m_Root->AddChild(m_ChainPlatform->GetBoardObject());
+        for (auto& obj : m_BalanceRopePlatform->GetAllObjects()) {
+            m_Root->AddChild(obj);
         }
+
 
         
         // --- 5. 拉桿 (Switches) ---
@@ -508,27 +516,7 @@ void App::LoadLevel(int level) {
         m_Root->AddChild(gear2);
 
 
-        // --- 鐵鍊旋轉平台 ---
-        if(level == 1) {
-            m_ChainPlatform = std::make_shared<ChainPlatform>(
-                PIC_PATH + "Lift(1).png",   // 鐵鍊圖片
-                PIC_PATH + "Lift(2).png",   // 平台圖片
 
-                glm::vec2(150.0f, -100.0f),    // 鐵鍊位置
-                glm::vec2(150.0f, -140.0f),     // 平台位置
-
-                glm::vec2(0.3f, 0.3f),      // 鐵鍊縮放
-                glm::vec2(0.3f, 0.3f),      // 平台縮放
-
-                160.0f,                     // 平台碰撞寬度
-                12.0f                       // 平台碰撞高度，先用 12 比較貼圖
-            );
-
-            m_ChainPlatform->SetRotation(0.0f);
-
-            m_Root->AddChild(m_ChainPlatform->GetChainObject());
-            m_Root->AddChild(m_ChainPlatform->GetBoardObject());
-        }
 
         
         // --- 5. 拉桿 (Switches) ---
@@ -621,27 +609,7 @@ void App::LoadLevel(int level) {
         m_Root->AddChild(gear2);
 
 
-        // --- 鐵鍊旋轉平台 ---
-        if(level == 1) {
-            m_ChainPlatform = std::make_shared<ChainPlatform>(
-                PIC_PATH + "Lift(1).png",   // 鐵鍊圖片
-                PIC_PATH + "Lift(2).png",   // 平台圖片
 
-                glm::vec2(150.0f, -100.0f),    // 鐵鍊位置
-                glm::vec2(150.0f, -140.0f),     // 平台位置
-
-                glm::vec2(0.3f, 0.3f),      // 鐵鍊縮放
-                glm::vec2(0.3f, 0.3f),      // 平台縮放
-
-                160.0f,                     // 平台碰撞寬度
-                12.0f                       // 平台碰撞高度，先用 12 比較貼圖
-            );
-
-            m_ChainPlatform->SetRotation(0.0f);
-
-            m_Root->AddChild(m_ChainPlatform->GetChainObject());
-            m_Root->AddChild(m_ChainPlatform->GetBoardObject());
-        }
 
         
         // --- 5. 拉桿 (Switches) ---
@@ -724,6 +692,12 @@ void App::ClearLevel() {
         m_Root->RemoveChild(m_ChainPlatform->GetChainObject());
         m_Root->RemoveChild(m_ChainPlatform->GetBoardObject());
         m_ChainPlatform = nullptr;
+    }
+
+    if (m_ChainPlatform2) {
+        m_Root->RemoveChild(m_ChainPlatform2->GetChainObject());
+        m_Root->RemoveChild(m_ChainPlatform2->GetBoardObject());
+        m_ChainPlatform2 = nullptr;
     }
 
     if (m_BalanceRopePlatform) {
