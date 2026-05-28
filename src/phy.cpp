@@ -296,6 +296,41 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         m_ChainPlatform->Update(0.0166f);
     }
 
+
+    // ===== 比重量平台：冰人、火人 =====
+    if (m_BalanceRopePlatform) {
+        m_BalanceRopePlatform->BeginFrame();
+
+        glm::vec2 icePos = m_Ice->m_Transform.translation;
+        glm::vec2 firePos = m_Fire->m_Transform.translation;
+
+        bool iceOnBalance = m_BalanceRopePlatform->CheckCollisionWithObject(
+            icePos,
+            m_Ice->GetScaledSize(),
+            m_IceVelocityY,
+            12.0f
+        );
+
+        bool fireOnBalance = m_BalanceRopePlatform->CheckCollisionWithObject(
+            firePos,
+            m_Fire->GetScaledSize(),
+            m_FireVelocityY,
+            12.0f
+        );
+
+        m_Ice->m_Transform.translation = icePos;
+        m_Fire->m_Transform.translation = firePos;
+
+        if (iceOnBalance) {
+            iG = true;
+        }
+
+        if (fireOnBalance) {
+            fG = true;
+        }
+    }
+
+
     m_IceOnGround = iG;
     m_FireOnGround = fG;
 
@@ -328,7 +363,29 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
                 }
             }
         }
+        // ===== 箱子也可以壓比重量平台 =====
+        if (m_BalanceRopePlatform) {
+            glm::vec2 boxPos = m_Box->m_Transform.translation;
+
+            bool boxOnBalance = m_BalanceRopePlatform->CheckCollisionWithObject(
+                boxPos,
+                m_Box->GetScaledSize(),
+                m_BoxVelocityY,
+                24.0f
+            );
+
+            m_Box->m_Transform.translation = boxPos;
+
+            if (boxOnBalance) {
+                m_BoxOnGround = true;
+            }
+        }
     }
+
+    if (m_BalanceRopePlatform) {
+        m_BalanceRopePlatform->Update(0.0166f);
+    }
+
     auto isStandingOnTop = [&](std::shared_ptr<Util::GameObject> character, std::shared_ptr<Util::GameObject> platform) {
         if (!character || !platform) return false;
         float charHalfW = character->GetScaledSize().x / 2.0f;

@@ -254,6 +254,34 @@ void App::LoadLevel(int level) {
         m_Root->AddChild(gear2);
 
 
+        // ============= 比重量平台 ==================
+        if (level == 1) {
+            m_BalanceRopePlatform = std::make_shared<BalanceRopePlatform>(
+                PIC_PATH + "wood.png",
+                PIC_PATH + "chain_left.png",
+                PIC_PATH + "chain_link.png",
+                PIC_PATH + "wheel.png",
+
+                glm::vec2(-100.0f, -30.0f), // 整組位置，X 越小越左
+                250.0f,                     // 左右平台距離中心
+                -250.0f,                    // 木板平衡時 Y
+                100.0f,                     // 輪子 Y，越大鏈越長
+
+                130.0f,                     // 木板碰撞寬
+                18.0f,                      // 木板碰撞高
+                -300.0f,                    // 最低 Y，越小掉越低
+
+                glm::vec2(0.55f, 0.55f),    // 木板 scale
+                glm::vec2(0.55f, 0.55f),    // V 鏈 scale
+                glm::vec2(0.45f, 0.45f),    // 小鏈節 scale
+                glm::vec2(0.45f, 0.45f)     // 輪子 scale
+            );
+
+            for (auto& obj : m_BalanceRopePlatform->GetAllObjects()) {
+                m_Root->AddChild(obj);
+            }
+        }
+
         // --- 鐵鍊旋轉平台 ---
         if(level == 1) {
             m_ChainPlatform = std::make_shared<ChainPlatform>(
@@ -696,6 +724,13 @@ void App::ClearLevel() {
         m_Root->RemoveChild(m_ChainPlatform->GetChainObject());
         m_Root->RemoveChild(m_ChainPlatform->GetBoardObject());
         m_ChainPlatform = nullptr;
+    }
+
+    if (m_BalanceRopePlatform) {
+        for (auto& obj : m_BalanceRopePlatform->GetAllObjects()) {
+            m_Root->RemoveChild(obj);
+        }
+        m_BalanceRopePlatform = nullptr;
     }
 
     // 5. 清理斜坡
