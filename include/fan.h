@@ -52,7 +52,7 @@ private:
     bool m_Active = false;
 
     float m_WindWidth = 90.0f;
-    float m_WindHeight = 230.0f;
+    float m_WindHeight = 290.0f;
     float m_WindPower = 3.0f;
 };
 
