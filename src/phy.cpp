@@ -27,6 +27,12 @@ bool App::IsColliding(const std::shared_ptr<Util::GameObject>& p,
     //     if (t == m_Gears[1]) std::swap(tW, tH);
     // }
 
+    // 只有第三個 gear，也就是新的直向 gear，要交換寬高
+    if (m_Gears.size() >= 3) {
+        if (p == m_Gears[2]) std::swap(pW, pH);
+        if (t == m_Gears[2]) std::swap(tW, tH);
+    }
+
     return (pP.x - pW / 2.0f < tP.x + tW / 2.0f &&
             pP.x + pW / 2.0f > tP.x - tW / 2.0f &&
             pP.y - pH / 2.0f < tP.y + tH / 2.0f &&
@@ -186,7 +192,13 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         // 處理向量中索引為 1 的 Gear2 旋轉邏輯
         // if (m_Gears.size() >= 2 && obj == m_Gears[1]) {
         //     std::swap(objW, objH);
+
         // }
+
+        // 只有第三個 gear，也就是新的直向 gear，要交換寬高
+        if (m_Gears.size() >= 3 && obj == m_Gears[2]) {
+            std::swap(objW, objH);
+        }
 
         float objLeft   = obj->m_Transform.translation.x - (objW / 2.0f);
         float objRight  = obj->m_Transform.translation.x + (objW / 2.0f);
@@ -296,6 +308,39 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         m_ChainPlatform->Update(0.0166f);
     }
 
+    if (m_ChainPlatform2) {
+        m_ChainPlatform2->BeginFrame();
+
+        glm::vec2 icePos = m_Ice->m_Transform.translation;
+        glm::vec2 firePos = m_Fire->m_Transform.translation;
+
+        bool iceOnChain = m_ChainPlatform2->CheckCollisionWithPlayer(
+            m_Ice->m_Transform.translation,
+            icePos,
+            m_Ice->GetScaledSize(),
+            m_IceVelocityY
+        );
+
+        bool fireOnChain = m_ChainPlatform2->CheckCollisionWithPlayer(
+            m_Fire->m_Transform.translation,
+            firePos,
+            m_Fire->GetScaledSize(),
+            m_FireVelocityY
+        );
+
+        m_Ice->m_Transform.translation = icePos;
+        m_Fire->m_Transform.translation = firePos;
+
+        if (iceOnChain) {
+            iG = true;
+        }
+
+        if (fireOnChain) {
+            fG = true;
+        }
+
+        m_ChainPlatform2->Update(0.0166f);
+    }
 
     // ===== 比重量平台：冰人、火人 =====
     if (m_BalanceRopePlatform) {
@@ -398,6 +443,11 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         //     std::swap(platHalfW, platHalfH);
         // }
 
+        // 只有第三個 gear，也就是新的直向 gear，要交換寬高
+        if (m_Gears.size() >= 3 && platform == m_Gears[2]) {
+            std::swap(platHalfW, platHalfH);
+        }
+
         float charLeft = character->m_Transform.translation.x - charHalfW;
         float charRight = character->m_Transform.translation.x + charHalfW;
         float charBottom = character->m_Transform.translation.y - charHalfH;
@@ -410,13 +460,29 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
     };
 
     // 向量化機關邏輯：按鈕 (Buttons)
-    bool anyButtonPressed = false;
+    // btn1 + btn2 控制 gear1
+    // btn3 + btn4 控制 gear2
+
+    std::vector<bool> buttonPressed(m_Buttons.size(), false);
+
     for (size_t i = 0; i < m_Buttons.size(); ++i) {
-        bool pressed = IsColliding(m_Ice, m_Buttons[i]) || 
-                       IsColliding(m_Fire, m_Buttons[i]) || 
-                       (m_Box && IsColliding(m_Box, m_Buttons[i]));
-        m_Buttons[i]->SetVisible(!pressed);
-        if (pressed) anyButtonPressed = true;
+        buttonPressed[i] =
+            IsColliding(m_Ice, m_Buttons[i]) ||
+            IsColliding(m_Fire, m_Buttons[i]) ||
+            (m_Box && IsColliding(m_Box, m_Buttons[i]));
+
+        m_Buttons[i]->SetVisible(!buttonPressed[i]);
+    }
+
+    bool gear0ButtonPressed = false;
+    bool gear1ButtonPressed = false;
+
+    if (m_Buttons.size() >= 2) {
+        gear0ButtonPressed = buttonPressed[0] || buttonPressed[1];
+    }
+
+    if (m_Buttons.size() >= 4) {
+        gear1ButtonPressed = buttonPressed[2] || buttonPressed[3];
     }
 
     // 向量化機關邏輯：拉桿 (Switches)
@@ -451,9 +517,24 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         // 邏輯保持：i=0 受按鈕控制, i=1 受拉桿控制
         float targetY = m_GearOriginalPositions[i].y;
         if (i == 0) {
-            targetY = anyButtonPressed ? (m_GearOriginalPositions[0].y - 75.0f) : m_GearOriginalPositions[0].y;
-        } else if (i == 1) {
-            targetY = (!m_SwitchStates.empty() && m_SwitchStates[0]) ? (m_GearOriginalPositions[1].y - 75.0f) : m_GearOriginalPositions[1].y;
+            float moveY = -75.0f;
+            targetY = gear0ButtonPressed
+                ? (m_GearOriginalPositions[0].y + moveY)
+                : m_GearOriginalPositions[0].y;
+        }
+        else if (i == 1) {
+            bool switchOn = !m_SwitchStates.empty() && m_SwitchStates[0];
+
+            targetY = (gear1ButtonPressed || switchOn)
+                ? (m_GearOriginalPositions[1].y - 75.0f)
+                : m_GearOriginalPositions[1].y;
+        }
+        else if (i == 2) {
+            float moveY = 75.0f;
+
+            targetY = gear0ButtonPressed
+                ? (m_GearOriginalPositions[2].y + moveY)
+                : m_GearOriginalPositions[2].y;
         }
 
         float speed = 2.0f;

@@ -9,8 +9,24 @@
 
 void App::LoadLevel(int level) {
     ClearLevel();
+
     m_CurrentLevelNum = level;
     m_Score = 0;
+
+    m_CurrentState = State::UPDATE;
+    m_DeadScreen->SetVisible(false);
+    m_PauseScreen->SetVisible(false);
+
+    m_GameTime = 0.0f;
+
+    m_IceVelocityY = 0.0f;
+    m_FireVelocityY = 0.0f;
+    m_BoxVelocityY = 0.0f;
+
+    m_IceOnGround = false;
+    m_FireOnGround = false;
+    m_BoxOnGround = false;
+
     srand(time(NULL));
     const float TILE_SIZE = 23.0f;
     const int MAP_WIDTH = 39;
@@ -53,7 +69,7 @@ void App::LoadLevel(int level) {
                 m_Stones.push_back(stone);
                 m_Root->AddChild(stone);
                 auto trap = std::make_shared<Util::GameObject>(
-                    std::make_shared<Util::Image>(PIC_PATH + "trap1.png"), -1.0f
+                    std::make_shared<Util::Image>(PIC_PATH + "ice_traps/1.png"), -1.0f
                 );
                 trap->m_Transform.translation = { posX, posY + 4.0f };
                 m_IceTraps.push_back(trap);
@@ -67,7 +83,7 @@ void App::LoadLevel(int level) {
                 m_Stones.push_back(stone);
                 m_Root->AddChild(stone);
                 auto trap = std::make_shared<Util::GameObject>(
-                    std::make_shared<Util::Image>(PIC_PATH + "trap2.png"), -1.0f
+                    std::make_shared<Util::Image>(PIC_PATH + "fire_traps/1.png"), -1.0f
                 );
                 trap->m_Transform.translation = { posX, posY };
                 m_FireTraps.push_back(trap);
@@ -81,7 +97,7 @@ void App::LoadLevel(int level) {
                 m_Stones.push_back(stone);
                 m_Root->AddChild(stone);
                 auto trap = std::make_shared<Util::GameObject>(
-                    std::make_shared<Util::Image>(PIC_PATH + "trap.png"), -1.0f
+                    std::make_shared<Util::Image>(PIC_PATH + "traps/1.png"), -1.0f
                 );
                 trap->m_Transform.translation = { posX, posY };
                 m_Traps.push_back(trap);
@@ -208,14 +224,14 @@ void App::LoadLevel(int level) {
         m_IceVelocityY = 0;
         m_FireVelocityY = 0;
 
-        m_IceDoor->m_Transform.translation = { 370.0f, 240.0f };
-        m_FireDoor->m_Transform.translation = { 300.0f, 240.0f };
+        m_IceDoor->m_Transform.translation = { -325.0f, 270.0f };
+        m_FireDoor->m_Transform.translation = { -400.0f, 270.0f };
 
         m_IceDoorFrameIndex = 0;
         m_FireDoorFrameIndex = 0;
         m_IceDoor->SetDrawable(std::make_shared<Util::Image>(m_IceDoorFrames[0]));
         m_FireDoor->SetDrawable(std::make_shared<Util::Image>(m_FireDoorFrames[0]));
-
+        
         if (!m_Box) {
             m_Box = std::make_shared<Util::GameObject>(
                 std::make_shared<Util::Image>(PIC_PATH + "box.png"), 0.1f
@@ -226,91 +242,97 @@ void App::LoadLevel(int level) {
         m_BoxOnGround = false;
         m_Box->m_Transform.translation = { 10.0f, 150.0f };
 
-        auto btn1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
-        btn1->m_Transform.translation = { -300.0f, -10.0f };
+        auto btn1 = std::make_shared<Util::GameObject>(
+    std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f
+);
+        btn1->m_Transform.translation = { 280.0f, -145.0f };
         m_Buttons.push_back(btn1);
         m_Root->AddChild(btn1);
 
-        // 按鈕 2
-        auto btn2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.0f);
-        btn2->m_Transform.translation = { 100.0f, 130.0f };
+        auto btn2 = std::make_shared<Util::GameObject>(
+            std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f
+        );
+        btn2->m_Transform.translation = { -245.0f, -145.0f };
         m_Buttons.push_back(btn2);
         m_Root->AddChild(btn2);
+
+        auto btn3 = std::make_shared<Util::GameObject>(
+            std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f
+        );
+        btn3->m_Transform.translation = { 280.0f, 145.0f };
+        m_Buttons.push_back(btn3);
+        m_Root->AddChild(btn3);
+
+        auto btn4 = std::make_shared<Util::GameObject>(
+            std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f
+        );
+        btn4->m_Transform.translation = { -245.0f, 145.0f };
+        m_Buttons.push_back(btn4);
+        m_Root->AddChild(btn4);
 
 
         // --- 4. 齒輪/移動地板 (Gears) ---
         // 齒輪 1
         auto gear1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
-        gear1->m_Transform.translation = { 380.0f, 46.0f };
+        gear1->m_Transform.translation = { -5.0f, -11500.0f };
+        gear1->m_Transform.rotation = glm::radians(90.0f);
         m_Gears.push_back(gear1);
         m_GearOriginalPositions.push_back(gear1->m_Transform.translation);
         m_Root->AddChild(gear1);
 
         // 齒輪 2 (垂直旋轉的)
         auto gear2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
-        gear2->m_Transform.translation = { -390.0f, -27.0f };
+        gear2->m_Transform.translation = { -390.0f, 27.0f };
         m_Gears.push_back(gear2);
         m_GearOriginalPositions.push_back(gear2->m_Transform.translation);
         m_Root->AddChild(gear2);
 
-
-        // ============= 比重量平台 ==================
-        if (level == 1) {
-            m_BalanceRopePlatform = std::make_shared<BalanceRopePlatform>(
-                PIC_PATH + "wood.png",
-                PIC_PATH + "chain_left.png",
-                PIC_PATH + "chain_link.png",
-                PIC_PATH + "wheel.png",
-
-                glm::vec2(-100.0f, -30.0f), // 整組位置，X 越小越左
-                250.0f,                     // 左右平台距離中心
-                -250.0f,                    // 木板平衡時 Y
-                100.0f,                     // 輪子 Y，越大鏈越長
-
-                130.0f,                     // 木板碰撞寬
-                18.0f,                      // 木板碰撞高
-                -300.0f,                    // 最低 Y，越小掉越低
-
-                glm::vec2(0.55f, 0.55f),    // 木板 scale
-                glm::vec2(0.55f, 0.55f),    // V 鏈 scale
-                glm::vec2(0.45f, 0.45f),    // 小鏈節 scale
-                glm::vec2(0.45f, 0.45f)     // 輪子 scale
-            );
-
-            for (auto& obj : m_BalanceRopePlatform->GetAllObjects()) {
-                m_Root->AddChild(obj);
-            }
-        }
+        // --- 新增 gearMoveUp ---gear3
+        auto gearMoveUp = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
+        gearMoveUp->m_Transform.translation = { 5.0f, -109.0f };
+        gearMoveUp->m_Transform.rotation = glm::radians(90.0f);
+        m_Gears.push_back(gearMoveUp);
+        m_GearOriginalPositions.push_back(gearMoveUp->m_Transform.translation);
+        m_Root->AddChild(gearMoveUp);
 
         // --- 鐵鍊旋轉平台 ---
-        if(level == 1) {
-            m_ChainPlatform = std::make_shared<ChainPlatform>(
-                PIC_PATH + "Lift(1).png",   // 鐵鍊圖片
-                PIC_PATH + "Lift(2).png",   // 平台圖片
+        m_ChainPlatform = std::make_shared<ChainPlatform>(
+        PIC_PATH + "Lift1.png",   // 鐵鍊圖片
+        PIC_PATH + "Lift2.png",   // 平台圖片
+        glm::vec2(150.0f, 73.0f),    // 鐵鍊位置
+        glm::vec2(150.0f, 20.0f),     // 平台位置
 
-                glm::vec2(150.0f, -100.0f),    // 鐵鍊位置
-                glm::vec2(150.0f, -140.0f),     // 平台位置
+        glm::vec2(0.4f, 0.4f),      // 鐵鍊縮放
+        glm::vec2(0.7f, 0.5f),      // 平台縮放
 
-                glm::vec2(0.3f, 0.3f),      // 鐵鍊縮放
-                glm::vec2(0.3f, 0.3f),      // 平台縮放
+        160.0f,                     // 平台碰撞寬度
+        12.0f                       // 平台碰撞高度，先用 12 比較貼圖
+        );
 
-                160.0f,                     // 平台碰撞寬度
-                12.0f                       // 平台碰撞高度，先用 12 比較貼圖
-            );
+        m_ChainPlatform->SetRotation(0.0f);
 
-            m_ChainPlatform->SetRotation(0.0f);
+        m_Root->AddChild(m_ChainPlatform->GetChainObject());
+        m_Root->AddChild(m_ChainPlatform->GetBoardObject());
 
-            m_Root->AddChild(m_ChainPlatform->GetChainObject());
-            m_Root->AddChild(m_ChainPlatform->GetBoardObject());
-        }
+        // --- 鐵鍊旋轉平台 ---
+        m_ChainPlatform2 = std::make_shared<ChainPlatform>(
+        PIC_PATH + "Lift1.png",   // 鐵鍊圖片
+        PIC_PATH + "Lift2.png",   // 平台圖片
+        glm::vec2(-150.0f, 73.0f),    // 鐵鍊位置
+        glm::vec2(-150.0f, 20.0f),     // 平台位置
 
-        
-        // --- 5. 拉桿 (Switches) ---
-        auto sw = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
-        sw->m_Transform.translation = { -150.0f, -130.0f };
-        m_Switches.push_back(sw);
-        m_SwitchStates.push_back(false); // 初始狀態設為關閉
-        m_Root->AddChild(sw);
+        glm::vec2(0.4f, 0.4f),      // 鐵鍊縮放
+        glm::vec2(0.7f, 0.5f),      // 平台縮放
+
+        160.0f,                     // 平台碰撞寬度
+        12.0f                       // 平台碰撞高度，先用 12 比較貼圖
+        );
+
+        m_ChainPlatform->SetRotation(0.0f);
+
+        m_Root->AddChild(m_ChainPlatform2->GetChainObject());
+        m_Root->AddChild(m_ChainPlatform2->GetBoardObject());
+
 
         // // ==========風扇=======================================================
 
@@ -395,28 +417,6 @@ void App::LoadLevel(int level) {
         m_Root->AddChild(gear2);
 
 
-        // --- 鐵鍊旋轉平台 ---
-        if(level == 1) {
-            m_ChainPlatform = std::make_shared<ChainPlatform>(
-                PIC_PATH + "Lift(1).png",   // 鐵鍊圖片
-                PIC_PATH + "Lift(2).png",   // 平台圖片
-
-                glm::vec2(150.0f, -100.0f),    // 鐵鍊位置
-                glm::vec2(150.0f, -140.0f),     // 平台位置
-
-                glm::vec2(0.3f, 0.3f),      // 鐵鍊縮放
-                glm::vec2(0.3f, 0.3f),      // 平台縮放
-
-                160.0f,                     // 平台碰撞寬度
-                12.0f                       // 平台碰撞高度，先用 12 比較貼圖
-            );
-
-            m_ChainPlatform->SetRotation(0.0f);
-
-            m_Root->AddChild(m_ChainPlatform->GetChainObject());
-            m_Root->AddChild(m_ChainPlatform->GetBoardObject());
-        }
-
         
         // --- 5. 拉桿 (Switches) ---
         auto sw = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
@@ -427,30 +427,30 @@ void App::LoadLevel(int level) {
 
         // // ==========風扇=======================================================
 
-        // std::vector<std::string> fanFrames;
-        // std::vector<std::string> windFrames;
+         std::vector<std::string> fanFrames;
+         std::vector<std::string> windFrames;
 
-        // for (int i = 1; i <= 4; i++) {
-        //     fanFrames.push_back(PIC_PATH + "fan(" + std::to_string(i) + ").png");
-        // }
-        // for (int i = 1; i <= 10; i++) {
-        //     windFrames.push_back(PIC_PATH + "wind(" + std::to_string(i) + ").png");
-        // }
+         for (int i = 1; i <= 4; i++) {
+             fanFrames.push_back(PIC_PATH + "fan(" + std::to_string(i) + ").png");
+         }
+         for (int i = 1; i <= 10; i++) {
+             windFrames.push_back(PIC_PATH + "wind(" + std::to_string(i) + ").png");
+         }
 
-        // m_Fan = std::make_shared<Fan>(fanFrames, windFrames);
-        // m_Root->AddChild(m_Fan->GetWindObject());
-        // m_Root->AddChild(m_Fan->GetFanObject());
-        // m_Fan->SetActive(true);
+         m_Fan = std::make_shared<Fan>(fanFrames, windFrames);
+         m_Root->AddChild(m_Fan->GetWindObject());
+         m_Root->AddChild(m_Fan->GetFanObject());
+         m_Fan->SetActive(true);
 
-        // m_Fan->SetPosition(
-        //     glm::vec2(150.0f, -300.0f),
-        //     glm::vec2(0.0f, 120.0f)
-        // );
+         m_Fan->SetPosition(
+             glm::vec2(-390.0f, -7.0f),
+             glm::vec2(0.0f, 140.0f)
+         );
 
-        // m_Fan->SetScale(
-        //     glm::vec2(0.45f, 0.45f),
-        //     glm::vec2(0.45f, 0.85f)
-        // );
+         m_Fan->SetScale(
+             glm::vec2(0.45f, 0.45f),
+             glm::vec2(0.45f, 0.85f)
+         );
         // // =====================================================================
 
         InitDiamonds();
@@ -508,27 +508,7 @@ void App::LoadLevel(int level) {
         m_Root->AddChild(gear2);
 
 
-        // --- 鐵鍊旋轉平台 ---
-        if(level == 1) {
-            m_ChainPlatform = std::make_shared<ChainPlatform>(
-                PIC_PATH + "Lift(1).png",   // 鐵鍊圖片
-                PIC_PATH + "Lift(2).png",   // 平台圖片
 
-                glm::vec2(150.0f, -100.0f),    // 鐵鍊位置
-                glm::vec2(150.0f, -140.0f),     // 平台位置
-
-                glm::vec2(0.3f, 0.3f),      // 鐵鍊縮放
-                glm::vec2(0.3f, 0.3f),      // 平台縮放
-
-                160.0f,                     // 平台碰撞寬度
-                12.0f                       // 平台碰撞高度，先用 12 比較貼圖
-            );
-
-            m_ChainPlatform->SetRotation(0.0f);
-
-            m_Root->AddChild(m_ChainPlatform->GetChainObject());
-            m_Root->AddChild(m_ChainPlatform->GetBoardObject());
-        }
 
         
         // --- 5. 拉桿 (Switches) ---
@@ -537,6 +517,33 @@ void App::LoadLevel(int level) {
         m_Switches.push_back(sw);
         m_SwitchStates.push_back(false); // 初始狀態設為關閉
         m_Root->AddChild(sw);
+
+        // ============= 比重量平台 ==================
+
+        m_BalanceRopePlatform = std::make_shared<BalanceRopePlatform>(
+        PIC_PATH + "wood.png",
+        PIC_PATH + "chain_left.png",
+        PIC_PATH + "chain_link.png",
+        PIC_PATH + "wheel.png",
+
+        glm::vec2(-100.0f, -30.0f), // 整組位置，X 越小越左
+        250.0f,                     // 左右平台距離中心
+        -250.0f,                    // 木板平衡時 Y
+        100.0f,                     // 輪子 Y，越大鏈越長
+
+        130.0f,                     // 木板碰撞寬
+        18.0f,                      // 木板碰撞高
+        -300.0f,                    // 最低 Y，越小掉越低
+
+        glm::vec2(0.55f, 0.55f),    // 木板 scale
+        glm::vec2(0.55f, 0.55f),    // V 鏈 scale
+        glm::vec2(0.45f, 0.45f),    // 小鏈節 scale
+        glm::vec2(0.45f, 0.45f)     // 輪子 scale
+        );
+
+        for (auto& obj : m_BalanceRopePlatform->GetAllObjects()) {
+            m_Root->AddChild(obj);
+        }
 
         // // ==========風扇=======================================================
 
@@ -621,27 +628,7 @@ void App::LoadLevel(int level) {
         m_Root->AddChild(gear2);
 
 
-        // --- 鐵鍊旋轉平台 ---
-        if(level == 1) {
-            m_ChainPlatform = std::make_shared<ChainPlatform>(
-                PIC_PATH + "Lift(1).png",   // 鐵鍊圖片
-                PIC_PATH + "Lift(2).png",   // 平台圖片
 
-                glm::vec2(150.0f, -100.0f),    // 鐵鍊位置
-                glm::vec2(150.0f, -140.0f),     // 平台位置
-
-                glm::vec2(0.3f, 0.3f),      // 鐵鍊縮放
-                glm::vec2(0.3f, 0.3f),      // 平台縮放
-
-                160.0f,                     // 平台碰撞寬度
-                12.0f                       // 平台碰撞高度，先用 12 比較貼圖
-            );
-
-            m_ChainPlatform->SetRotation(0.0f);
-
-            m_Root->AddChild(m_ChainPlatform->GetChainObject());
-            m_Root->AddChild(m_ChainPlatform->GetBoardObject());
-        }
 
         
         // --- 5. 拉桿 (Switches) ---
@@ -720,10 +707,23 @@ void App::ClearLevel() {
     cleanup(m_RedDiamond);
     cleanup(m_BlueDiamond);
 
+    // 清理風扇
+    if (m_Fan) {
+        m_Root->RemoveChild(m_Fan->GetWindObject());
+        m_Root->RemoveChild(m_Fan->GetFanObject());
+        m_Fan = nullptr;
+    }
+
     if (m_ChainPlatform) {
         m_Root->RemoveChild(m_ChainPlatform->GetChainObject());
         m_Root->RemoveChild(m_ChainPlatform->GetBoardObject());
         m_ChainPlatform = nullptr;
+    }
+
+    if (m_ChainPlatform2) {
+        m_Root->RemoveChild(m_ChainPlatform2->GetChainObject());
+        m_Root->RemoveChild(m_ChainPlatform2->GetBoardObject());
+        m_ChainPlatform2 = nullptr;
     }
 
     if (m_BalanceRopePlatform) {
