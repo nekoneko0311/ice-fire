@@ -109,8 +109,8 @@ void App::LoadLevel(int level) {
     }
 
     if (level == 1) {
-        m_Ice->m_Transform.translation = { -350.0f, -280.0f };
-        m_Fire->m_Transform.translation = { -380.0f, -280.0f };
+        m_Ice->m_Transform.translation = { -350.0f, -190.0f };
+        m_Fire->m_Transform.translation = { -350.0f, -280.0f };
         m_IceVelocityY = 0;
         m_FireVelocityY = 0;
 
@@ -132,94 +132,41 @@ void App::LoadLevel(int level) {
         m_BoxOnGround = false;
         m_Box->m_Transform.translation = { 10.0f, 150.0f };
 
-        auto btn1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
-        btn1->m_Transform.translation = { -300.0f, -10.0f };
-        m_Buttons.push_back(btn1);
-        m_Root->AddChild(btn1);
+        // --- 雙按鈕組合 (控制 b2gear1) ---
+        button2_1_1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
+        button2_1_1->m_Transform.translation = { -300.0f, -10.0f };
+        m_Root->AddChild(button2_1_1);
 
-        // 按鈕 2
-        auto btn2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.0f);
-        btn2->m_Transform.translation = { 100.0f, 130.0f };
-        m_Buttons.push_back(btn2);
-        m_Root->AddChild(btn2);
+        button2_1_2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.0f);
+        button2_1_2->m_Transform.translation = { 100.0f, 130.0f };
+        m_Root->AddChild(button2_1_2);
 
 
-        // --- 4. 齒輪/移動地板 (Gears) ---
-
-        auto gear1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
-        gear1->m_Transform.translation = { 380.0f, 46.0f };
-        m_Gears.push_back(gear1);
-        m_GearOriginalPositions.push_back(gear1->m_Transform.translation);
-        m_Root->AddChild(gear1);
+        // --- 兩個按鈕控制的機關 (b2gear1) ---
+        b2gear1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
+        b2gear1->m_Transform.translation = { 380.0f, 46.0f };
+        b2gear1OriginalPos = b2gear1->m_Transform.translation; // 記錄原始位置
+        m_Root->AddChild(b2gear1);
 
 
-        auto gear2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
-        gear2->m_Transform.translation = { -390.0f, -27.0f };
-        m_Gears.push_back(gear2);
-        m_GearOriginalPositions.push_back(gear2->m_Transform.translation);
-        m_Root->AddChild(gear2);
+        // --- Switch 控制的機關 (sgear1) ---
+        sgear1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
+        sgear1->m_Transform.translation = { -385.0f, -27.0f };
+        sgear1OriginalPos = sgear1->m_Transform.translation; // 記錄原始位置
+        m_Root->AddChild(sgear1);
 
 
-        // --- 鐵鍊旋轉平台 ---
-            // m_ChainPlatform = std::make_shared<ChainPlatform>(
-            //     PIC_PATH + "lift1.png",   // 鐵鍊圖片
-            //     PIC_PATH + "lift2.png",   // 平台圖片
-
-            //     glm::vec2(150.0f, -100.0f),    // 鐵鍊位置
-            //     glm::vec2(150.0f, -140.0f),     // 平台位置
-
-            //     glm::vec2(0.3f, 0.3f),      // 鐵鍊縮放
-            //     glm::vec2(0.3f, 0.3f),      // 平台縮放
-
-            //     160.0f,                     // 平台碰撞寬度
-            //     12.0f                       // 平台碰撞高度，先用 12 比較貼圖
-            // );
-
-            // m_ChainPlatform->SetRotation(0.0f);
-
-            // m_Root->AddChild(m_ChainPlatform->GetChainObject());
-            // m_Root->AddChild(m_ChainPlatform->GetBoardObject());
-
-        // --- 5. 拉桿 (Switches) ---
-        auto sw = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
-        sw->m_Transform.translation = { -150.0f, -130.0f };
-        m_Switches.push_back(sw);
-        m_SwitchStates.push_back(false); // 初始狀態設為關閉
-        m_Root->AddChild(sw);
-
-        // // ==========風扇=======================================================
-
-        // std::vector<std::string> fanFrames;
-        // std::vector<std::string> windFrames;
-
-        // for (int i = 1; i <= 4; i++) {
-        //     fanFrames.push_back(PIC_PATH + "fan(" + std::to_string(i) + ").png");
-        // }
-        // for (int i = 1; i <= 10; i++) {
-        //     windFrames.push_back(PIC_PATH + "wind(" + std::to_string(i) + ").png");
-        // }
-
-        // m_Fan = std::make_shared<Fan>(fanFrames, windFrames);
-        // m_Root->AddChild(m_Fan->GetWindObject());
-        // m_Root->AddChild(m_Fan->GetFanObject());
-        // m_Fan->SetActive(true);
-
-        // m_Fan->SetPosition(
-        //     glm::vec2(150.0f, -300.0f),
-        //     glm::vec2(0.0f, 120.0f)
-        // );
-
-        // m_Fan->SetScale(
-        //     glm::vec2(0.45f, 0.45f),
-        //     glm::vec2(0.45f, 0.85f)
-        // );
-        // // =====================================================================
+        // --- 拉桿 (switch1) ---
+        switch1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
+        switch1->m_Transform.translation = { -150.0f, -130.0f };
+        switch1State = false; // 初始狀態設為關閉
+        m_Root->AddChild(switch1);
 
         InitDiamonds();
     }
 
     else if (level == 2) {
-        m_Ice->m_Transform.translation = { -350.0f, -190.0f };
+        m_Ice->m_Transform.translation = { -400.0f, -280.0f };
         m_Fire->m_Transform.translation = { -350.0f, -280.0f };
         m_IceVelocityY = 0;
         m_FireVelocityY = 0;
@@ -240,60 +187,37 @@ void App::LoadLevel(int level) {
         }
         m_BoxVelocityY = 0.0f;
         m_BoxOnGround = false;
-        m_Box->m_Transform.translation = { 10.0f, 150.0f };
+        m_Box->m_Transform.translation = { -9999.0f, -9999.0f };
 
-        auto btn1 = std::make_shared<Util::GameObject>(
-    std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f
-);
-        btn1->m_Transform.translation = { 280.0f, -145.0f };
-        m_Buttons.push_back(btn1);
-        m_Root->AddChild(btn1);
+        button2_2_1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
+        button2_2_1->m_Transform.translation = { 280.0f, -145.0f };
+        m_Root->AddChild(button2_2_1);
 
-        auto btn2 = std::make_shared<Util::GameObject>(
-            std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f
-        );
-        btn2->m_Transform.translation = { -245.0f, -145.0f };
-        m_Buttons.push_back(btn2);
-        m_Root->AddChild(btn2);
+        button2_2_2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
+        button2_2_2->m_Transform.translation = { -245.0f, -145.0f };
+        m_Root->AddChild(button2_2_2);
 
-        auto btn3 = std::make_shared<Util::GameObject>(
-            std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f
-        );
-        btn3->m_Transform.translation = { 280.0f, 145.0f };
-        m_Buttons.push_back(btn3);
-        m_Root->AddChild(btn3);
+        button2_3_1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
+        button2_3_1->m_Transform.translation = { 150.0f, 225.0f };
+        m_Root->AddChild(button2_3_1);
 
-        auto btn4 = std::make_shared<Util::GameObject>(
-            std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f
-        );
-        btn4->m_Transform.translation = { -245.0f, 145.0f };
-        m_Buttons.push_back(btn4);
-        m_Root->AddChild(btn4);
+        button2_3_2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
+        button2_3_2->m_Transform.translation = { -150.0f, 225.0f };
+        m_Root->AddChild(button2_3_2);
 
 
-        // --- 4. 齒輪/移動地板 (Gears) ---
-        // 齒輪 1
-        auto gear1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
-        gear1->m_Transform.translation = { -5.0f, -11500.0f };
-        gear1->m_Transform.rotation = glm::radians(90.0f);
-        m_Gears.push_back(gear1);
-        m_GearOriginalPositions.push_back(gear1->m_Transform.translation);
-        m_Root->AddChild(gear1);
+        // --- 兩個按鈕控制的機關 (b2gear2 與 b2gear3) ---
 
-        // 齒輪 2 (垂直旋轉的)
-        auto gear2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
-        gear2->m_Transform.translation = { -390.0f, 27.0f };
-        m_Gears.push_back(gear2);
-        m_GearOriginalPositions.push_back(gear2->m_Transform.translation);
-        m_Root->AddChild(gear2);
+        b2gear2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear4.png"), -1.0f);
+        b2gear2->m_Transform.translation = { 0.0f, -100.0f };
+        b2gear2OriginalPos = b2gear2->m_Transform.translation;
+        m_Root->AddChild(b2gear2);
 
-        // --- 新增 gearMoveUp ---gear3
-        auto gearMoveUp = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
-        gearMoveUp->m_Transform.translation = { 5.0f, -109.0f };
-        gearMoveUp->m_Transform.rotation = glm::radians(90.0f);
-        m_Gears.push_back(gearMoveUp);
-        m_GearOriginalPositions.push_back(gearMoveUp->m_Transform.translation);
-        m_Root->AddChild(gearMoveUp);
+        b2gear3 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
+        b2gear3->m_Transform.translation = { 80.0f, 215.0f };
+        b2gear3OriginalPos = b2gear3->m_Transform.translation;
+        m_Root->AddChild(b2gear3);
+
 
         // --- 鐵鍊旋轉平台 ---
         m_ChainPlatform = std::make_shared<ChainPlatform>(
@@ -366,13 +290,13 @@ void App::LoadLevel(int level) {
     }
 
     else if (level == 3) {
-        m_Ice->m_Transform.translation = { -350.0f, -190.0f };
+        m_Ice->m_Transform.translation = { 350.0f, -280.0f };
         m_Fire->m_Transform.translation = { -350.0f, -280.0f };
         m_IceVelocityY = 0;
         m_FireVelocityY = 0;
 
-        m_IceDoor->m_Transform.translation = { 370.0f, 240.0f };
-        m_FireDoor->m_Transform.translation = { 300.0f, 240.0f };
+        m_IceDoor->m_Transform.translation = { 150.0f, -30.0f };
+        m_FireDoor->m_Transform.translation = { -150.0f, -30.0f };
 
         m_IceDoorFrameIndex = 0;
         m_FireDoorFrameIndex = 0;
@@ -387,43 +311,7 @@ void App::LoadLevel(int level) {
         }
         m_BoxVelocityY = 0.0f;
         m_BoxOnGround = false;
-        m_Box->m_Transform.translation = { 10.0f, 150.0f };
-
-        auto btn1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
-        btn1->m_Transform.translation = { -300.0f, -10.0f };
-        m_Buttons.push_back(btn1);
-        m_Root->AddChild(btn1);
-
-        // 按鈕 2
-        auto btn2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.0f);
-        btn2->m_Transform.translation = { 100.0f, 130.0f };
-        m_Buttons.push_back(btn2);
-        m_Root->AddChild(btn2);
-
-
-        // --- 4. 齒輪/移動地板 (Gears) ---
-        // 齒輪 1
-        auto gear1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
-        gear1->m_Transform.translation = { 380.0f, 46.0f };
-        m_Gears.push_back(gear1);
-        m_GearOriginalPositions.push_back(gear1->m_Transform.translation);
-        m_Root->AddChild(gear1);
-
-        // 齒輪 2 (垂直旋轉的)
-        auto gear2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
-        gear2->m_Transform.translation = { -390.0f, -27.0f };
-        m_Gears.push_back(gear2);
-        m_GearOriginalPositions.push_back(gear2->m_Transform.translation);
-        m_Root->AddChild(gear2);
-
-
-        
-        // --- 5. 拉桿 (Switches) ---
-        auto sw = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
-        sw->m_Transform.translation = { -150.0f, -130.0f };
-        m_Switches.push_back(sw);
-        m_SwitchStates.push_back(false); // 初始狀態設為關閉
-        m_Root->AddChild(sw);
+        m_Box->m_Transform.translation = { -9999.0f, -9999.0f };
 
         // // ==========風扇=======================================================
 
@@ -457,13 +345,13 @@ void App::LoadLevel(int level) {
     }
 
     else if (level == 4) {
-        m_Ice->m_Transform.translation = { -350.0f, -190.0f };
-        m_Fire->m_Transform.translation = { -350.0f, -280.0f };
+        m_Ice->m_Transform.translation = { 350.0f, 250.0f };
+        m_Fire->m_Transform.translation = { -400.0f, -280.0f };
         m_IceVelocityY = 0;
         m_FireVelocityY = 0;
 
-        m_IceDoor->m_Transform.translation = { 370.0f, 240.0f };
-        m_FireDoor->m_Transform.translation = { 300.0f, 240.0f };
+        m_IceDoor->m_Transform.translation = { -250.0f, -150.0f };
+        m_FireDoor->m_Transform.translation = { -300.0f, -150.0f };
 
         m_IceDoorFrameIndex = 0;
         m_FireDoorFrameIndex = 0;
@@ -478,46 +366,29 @@ void App::LoadLevel(int level) {
         }
         m_BoxVelocityY = 0.0f;
         m_BoxOnGround = false;
-        m_Box->m_Transform.translation = { 10.0f, 150.0f };
+        m_Box->m_Transform.translation = { 300.0f, 250.0f };
 
-        auto btn1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
-        btn1->m_Transform.translation = { -300.0f, -10.0f };
-        m_Buttons.push_back(btn1);
-        m_Root->AddChild(btn1);
+        // --- 按鈕 1 與其控制的機關 (button1 & b1gear1) ---
+        button1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
+        button1->m_Transform.translation = { 150.0f, -80.0f };
+        m_Root->AddChild(button1);
 
-        // 按鈕 2
-        auto btn2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.0f);
-        btn2->m_Transform.translation = { 100.0f, 130.0f };
-        m_Buttons.push_back(btn2);
-        m_Root->AddChild(btn2);
-
-
-        // --- 4. 齒輪/移動地板 (Gears) ---
-        // 齒輪 1
-        auto gear1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
-        gear1->m_Transform.translation = { 380.0f, 46.0f };
-        m_Gears.push_back(gear1);
-        m_GearOriginalPositions.push_back(gear1->m_Transform.translation);
-        m_Root->AddChild(gear1);
-
-        // 齒輪 2 (垂直旋轉的)
-        auto gear2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
-        gear2->m_Transform.translation = { -390.0f, -27.0f };
-        m_Gears.push_back(gear2);
-        m_GearOriginalPositions.push_back(gear2->m_Transform.translation);
-        m_Root->AddChild(gear2);
+        b1gear1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
+        b1gear1->m_Transform.translation = { 300.0f, 0.0f };
+        b1gear1OriginalPos = b1gear1->m_Transform.translation; // 記錄原始位置
+        m_Root->AddChild(b1gear1);
 
 
+        // --- 拉桿 2 與其控制的機關 (switch2 & sgear2) ---
+        switch2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
+        switch2->m_Transform.translation = { -150.0f, -80.0f };
+        switch2State = false; // 初始狀態設為關閉
+        m_Root->AddChild(switch2);
 
-
-        
-        // --- 5. 拉桿 (Switches) ---
-        auto sw = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
-        sw->m_Transform.translation = { -150.0f, -130.0f };
-        m_Switches.push_back(sw);
-        m_SwitchStates.push_back(false); // 初始狀態設為關閉
-        m_Root->AddChild(sw);
-
+        sgear2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
+        sgear2->m_Transform.translation = { -300.0f, 0.0f };
+        sgear2OriginalPos = sgear2->m_Transform.translation; // 記錄原始位置
+        m_Root->AddChild(sgear2);
         // ============= 比重量平台 ==================
 
         m_BalanceRopePlatform = std::make_shared<BalanceRopePlatform>(
@@ -577,13 +448,13 @@ void App::LoadLevel(int level) {
     }
 
     else if (level == 5) {
-        m_Ice->m_Transform.translation = { -350.0f, -190.0f };
-        m_Fire->m_Transform.translation = { -350.0f, -280.0f };
+        m_Ice->m_Transform.translation = { 100.0f, -280.0f };
+        m_Fire->m_Transform.translation = { -100.0f, -280.0f };
         m_IceVelocityY = 0;
         m_FireVelocityY = 0;
 
-        m_IceDoor->m_Transform.translation = { 370.0f, 240.0f };
-        m_FireDoor->m_Transform.translation = { 300.0f, 240.0f };
+        m_IceDoor->m_Transform.translation = { 220.0f, 0.0f };
+        m_FireDoor->m_Transform.translation = { -220.0f, 0.0f };
 
         m_IceDoorFrameIndex = 0;
         m_FireDoorFrameIndex = 0;
@@ -598,78 +469,49 @@ void App::LoadLevel(int level) {
         }
         m_BoxVelocityY = 0.0f;
         m_BoxOnGround = false;
-        m_Box->m_Transform.translation = { 10.0f, 150.0f };
+        m_Box->m_Transform.translation = { -9999.0f, -9999.0f };
 
-        auto btn1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
-        btn1->m_Transform.translation = { -300.0f, -10.0f };
-        m_Buttons.push_back(btn1);
-        m_Root->AddChild(btn1);
+        // --- 拉桿 3 與其控制的機關 (switch3 & sgear3) ---
+        switch3 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
+        switch3->m_Transform.translation = { -200.0f, -100.0f };
+        switch3State = false; 
+        m_Root->AddChild(switch3);
 
-        // 按鈕 2
-        auto btn2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.0f);
-        btn2->m_Transform.translation = { 100.0f, 130.0f };
-        m_Buttons.push_back(btn2);
-        m_Root->AddChild(btn2);
-
-
-        // --- 4. 齒輪/移動地板 (Gears) ---
-        // 齒輪 1
-        auto gear1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
-        gear1->m_Transform.translation = { 380.0f, 46.0f };
-        m_Gears.push_back(gear1);
-        m_GearOriginalPositions.push_back(gear1->m_Transform.translation);
-        m_Root->AddChild(gear1);
-
-        // 齒輪 2 (垂直旋轉的)
-        auto gear2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
-        gear2->m_Transform.translation = { -390.0f, -27.0f };
-        m_Gears.push_back(gear2);
-        m_GearOriginalPositions.push_back(gear2->m_Transform.translation);
-        m_Root->AddChild(gear2);
+        sgear3 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
+        sgear3->m_Transform.translation = { -200.0f, 100.0f };
+        sgear3OriginalPos = sgear3->m_Transform.translation; 
+        m_Root->AddChild(sgear3);
 
 
+        // --- 拉桿 4 與其控制的機關 (switch4 & sgear4) ---
+        switch4 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
+        switch4->m_Transform.translation = { 0.0f, -100.0f };
+        switch4State = false; 
+        m_Root->AddChild(switch4);
+
+        sgear4 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
+        sgear4->m_Transform.translation = { 0.0f, 100.0f };
+        sgear4OriginalPos = sgear4->m_Transform.translation; 
+        m_Root->AddChild(sgear4);
 
 
-        
-        // --- 5. 拉桿 (Switches) ---
-        auto sw = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
-        sw->m_Transform.translation = { -150.0f, -130.0f };
-        m_Switches.push_back(sw);
-        m_SwitchStates.push_back(false); // 初始狀態設為關閉
-        m_Root->AddChild(sw);
+        // --- 拉桿 5 與其控制的機關 (switch5 & sgear5) ---
+        switch5 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
+        switch5->m_Transform.translation = { 200.0f, -100.0f };
+        switch5State = false; 
+        m_Root->AddChild(switch5);
 
-        // // ==========風扇=======================================================
-
-        // std::vector<std::string> fanFrames;
-        // std::vector<std::string> windFrames;
-
-        // for (int i = 1; i <= 4; i++) {
-        //     fanFrames.push_back(PIC_PATH + "fan(" + std::to_string(i) + ").png");
-        // }
-        // for (int i = 1; i <= 10; i++) {
-        //     windFrames.push_back(PIC_PATH + "wind(" + std::to_string(i) + ").png");
-        // }
-
-        // m_Fan = std::make_shared<Fan>(fanFrames, windFrames);
-        // m_Root->AddChild(m_Fan->GetWindObject());
-        // m_Root->AddChild(m_Fan->GetFanObject());
-        // m_Fan->SetActive(true);
-
-        // m_Fan->SetPosition(
-        //     glm::vec2(150.0f, -300.0f),
-        //     glm::vec2(0.0f, 120.0f)
-        // );
-
-        // m_Fan->SetScale(
-        //     glm::vec2(0.45f, 0.45f),
-        //     glm::vec2(0.45f, 0.85f)
-        // );
-        // // =====================================================================
+        sgear5 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
+        sgear5->m_Transform.translation = { 200.0f, 100.0f };
+        sgear5OriginalPos = sgear5->m_Transform.translation; 
+        m_Root->AddChild(sgear5);
 
         InitDiamonds();
     }
 
+ 
 }
+
 
 void App::ClearLevel() {
     // 1. 清理石頭
@@ -684,20 +526,53 @@ void App::ClearLevel() {
     for (auto& t : m_FireTraps) m_Root->RemoveChild(t);
     m_FireTraps.clear();
 
-    // 3. 清理機關類向量 (Buttons, Gears, Switches)
-    // 這是你提到的重點：將原本單一的 cleanup 改為迴圈清理向量
-    for (auto& btn : m_Buttons) m_Root->RemoveChild(btn);
-    m_Buttons.clear();
+    // ===== 清除所有 Buttons =====
+    if (button1) { m_Root->RemoveChild(button1); button1 = nullptr; }
+    if (button2_1_1) { m_Root->RemoveChild(button2_1_1); button2_1_1 = nullptr; }
+    if (button2_1_2) { m_Root->RemoveChild(button2_1_2); button2_1_2 = nullptr; }
+    if (button2_2_1) { m_Root->RemoveChild(button2_2_1); button2_2_1 = nullptr; }
+    if (button2_2_2) { m_Root->RemoveChild(button2_2_2); button2_2_2 = nullptr; }
+    if (button2_3_1) { m_Root->RemoveChild(button2_3_1); button2_3_1 = nullptr; }
+    if (button2_3_2) { m_Root->RemoveChild(button2_3_2); button2_3_2 = nullptr; }
 
-    for (auto& gear : m_Gears) m_Root->RemoveChild(gear);
-    m_Gears.clear();
-    m_GearOriginalPositions.clear(); // 座標向量也要清空
+    // ===== 清除所有 Switches 並重置狀態 =====
+    if (switch1) { m_Root->RemoveChild(switch1); switch1 = nullptr; }
+    if (switch2) { m_Root->RemoveChild(switch2); switch2 = nullptr; }
+    if (switch3) { m_Root->RemoveChild(switch3); switch3 = nullptr; }
+    if (switch4) { m_Root->RemoveChild(switch4); switch4 = nullptr; }
+    if (switch5) { m_Root->RemoveChild(switch5); switch5 = nullptr; }
 
-    for (auto& sw : m_Switches) m_Root->RemoveChild(sw);
-    m_Switches.clear();
-    m_SwitchStates.clear(); // 清空開關狀態向量
+    switch1State = false;
+    switch2State = false;
+    switch3State = false;
+    switch4State = false;
+    switch5State = false;
 
-    // 4. 清理其餘單一物件 (鑽石等)
+    // ===== 清除所有 Gears =====
+    if (sgear1) { m_Root->RemoveChild(sgear1); sgear1 = nullptr; }
+    if (sgear2) { m_Root->RemoveChild(sgear2); sgear2 = nullptr; }
+    if (sgear3) { m_Root->RemoveChild(sgear3); sgear3 = nullptr; }
+    if (sgear4) { m_Root->RemoveChild(sgear4); sgear4 = nullptr; }
+    if (sgear5) { m_Root->RemoveChild(sgear5); sgear5 = nullptr; }
+
+    if (b1gear1) { m_Root->RemoveChild(b1gear1); b1gear1 = nullptr; }
+
+    if (b2gear1) { m_Root->RemoveChild(b2gear1); b2gear1 = nullptr; }
+    if (b2gear2) { m_Root->RemoveChild(b2gear2); b2gear2 = nullptr; }
+    if (b2gear3) { m_Root->RemoveChild(b2gear3); b2gear3 = nullptr; }
+
+    // ===== 重置所有原始座標 =====
+    sgear1OriginalPos = { 9999.0f, 9999.0f };
+    sgear2OriginalPos = { 9999.0f, 9999.0f };
+    sgear3OriginalPos = { 9999.0f, 9999.0f };
+    sgear4OriginalPos = { 9999.0f, 9999.0f };
+    sgear5OriginalPos = { 9999.0f, 9999.0f };
+
+    b1gear1OriginalPos = { 9999.0f, 9999.0f };
+
+    b2gear1OriginalPos = { 9999.0f, 9999.0f };
+    b2gear2OriginalPos = { 9999.0f, 9999.0f };
+    b2gear3OriginalPos = { 9999.0f, 9999.0f };
     auto cleanup = [&](std::shared_ptr<Util::GameObject>& obj) {
         if (obj) {
             m_Root->RemoveChild(obj);
@@ -707,7 +582,6 @@ void App::ClearLevel() {
     cleanup(m_RedDiamond);
     cleanup(m_BlueDiamond);
 
-    // 清理風扇
     if (m_Fan) {
         m_Root->RemoveChild(m_Fan->GetWindObject());
         m_Root->RemoveChild(m_Fan->GetFanObject());
@@ -733,14 +607,6 @@ void App::ClearLevel() {
         m_BalanceRopePlatform = nullptr;
     }
 
-    // 5. 清理斜坡
-    for (auto& slope : m_Slopes) {
-        if (slope.GetImage()) m_Root->RemoveChild(slope.GetImage());
-    }
-    m_Slopes.clear();
-
-    // 6. 重置角色狀態與物理參數
     m_IceVelocityY = 0;
     m_FireVelocityY = 0;
-    // 如果你有一個全域的開關總變數也可以重置，但主要應該是清空 m_SwitchStates
 }

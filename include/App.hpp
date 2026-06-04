@@ -58,6 +58,7 @@ private:
     std::shared_ptr<Util::GameObject> m_Ice;
     std::shared_ptr<Util::GameObject> m_Fire;
     float m_GameTime = 0.0f;//計時
+    bool ischeatingmode = false;
 
     //=======物理參數====================================================================
     float m_Gravity = 0.4f;
@@ -83,11 +84,54 @@ private:
     std::vector<std::shared_ptr<Util::GameObject>> m_Traps;
     std::vector<std::shared_ptr<Util::GameObject>> m_Stones;
     std::shared_ptr<Util::GameObject> m_Box;                //箱子
-    std::vector<std::shared_ptr<Util::GameObject>> m_Buttons;
-    std::vector<std::shared_ptr<Util::GameObject>> m_Switches;
-    std::vector<std::shared_ptr<Util::GameObject>> m_Gears;
-    std::vector<glm::vec2> m_GearOriginalPositions;
-    std::vector<bool> m_SwitchStates;
+
+    //======發瘋了機關不用向量了===========================================
+    std::shared_ptr<Util::GameObject> sgear1;
+    std::shared_ptr<Util::GameObject> sgear2;
+    std::shared_ptr<Util::GameObject> sgear3;
+    std::shared_ptr<Util::GameObject> sgear4;
+    std::shared_ptr<Util::GameObject> sgear5;
+
+    std::shared_ptr<Util::GameObject> b1gear1;
+
+    std::shared_ptr<Util::GameObject> b2gear1;
+    std::shared_ptr<Util::GameObject> b2gear2;
+    std::shared_ptr<Util::GameObject> b2gear3;
+
+    std::shared_ptr<Util::GameObject> switch1;
+    std::shared_ptr<Util::GameObject> switch2;
+    std::shared_ptr<Util::GameObject> switch3;
+    std::shared_ptr<Util::GameObject> switch4;
+    std::shared_ptr<Util::GameObject> switch5;
+
+    std::shared_ptr<Util::GameObject> button1;
+
+    std::shared_ptr<Util::GameObject> button2_1_1;
+    std::shared_ptr<Util::GameObject> button2_1_2;
+
+    std::shared_ptr<Util::GameObject> button2_2_1;
+    std::shared_ptr<Util::GameObject> button2_2_2;
+
+    std::shared_ptr<Util::GameObject> button2_3_1;
+    std::shared_ptr<Util::GameObject> button2_3_2;
+
+    bool switch1State = false;
+    bool switch2State = false;
+    bool switch3State = false;
+    bool switch4State = false;
+    bool switch5State = false;
+
+    glm::vec2 sgear1OriginalPos;
+    glm::vec2 sgear2OriginalPos;
+    glm::vec2 sgear3OriginalPos;
+    glm::vec2 sgear4OriginalPos;
+    glm::vec2 sgear5OriginalPos;
+
+    glm::vec2 b1gear1OriginalPos;
+
+    glm::vec2 b2gear1OriginalPos;
+    glm::vec2 b2gear2OriginalPos;
+    glm::vec2 b2gear3OriginalPos;
     //=====================================================================
 
 

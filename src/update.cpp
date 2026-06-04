@@ -40,6 +40,10 @@ void App::Update() {
         m_Root->Update(); return;
     }
 
+    if (Util::Input::IsKeyDown(Util::Keycode::C)) {
+        if (ischeatingmode)ischeatingmode = false;
+        else ischeatingmode = true;
+    }
     //暫停&恢復
     if (Util::Input::IsKeyDown(Util::Keycode::ESCAPE)) {
         m_CurrentState = (m_CurrentState == State::UPDATE) ? State::PAUSE : State::UPDATE;

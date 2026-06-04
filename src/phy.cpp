@@ -21,17 +21,7 @@ bool App::IsColliding(const std::shared_ptr<Util::GameObject>& p,
     float tW = tS.x;
     float tH = tS.y;
 
-    // 翻轉，目前用不到
-    // if (m_Gears.size() >= 2) {
-    //     if (p == m_Gears[1]) std::swap(pW, pH);
-    //     if (t == m_Gears[1]) std::swap(tW, tH);
-    // }
 
-    // 只有第三個 gear，也就是新的直向 gear，要交換寬高
-    if (m_Gears.size() >= 3) {
-        if (p == m_Gears[2]) std::swap(pW, pH);
-        if (t == m_Gears[2]) std::swap(tW, tH);
-    }
 
     return (pP.x - pW / 2.0f < tP.x + tW / 2.0f &&
             pP.x + pW / 2.0f > tP.x - tW / 2.0f &&
@@ -67,14 +57,16 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
                         break;
                     }
                 }
-                
-                // 改為遍歷向量 m_Gears
-                for (auto& gear : m_Gears) {
-                    if (IsColliding(m_Box, gear)) {
-                        hitSomething = true;
-                        break;
-                    }
-                }
+
+                if (sgear1 && IsColliding(m_Box, sgear1)) hitSomething = true;
+                else if (sgear2 && IsColliding(m_Box, sgear2)) hitSomething = true;
+                else if (sgear3 && IsColliding(m_Box, sgear3)) hitSomething = true;
+                else if (sgear4 && IsColliding(m_Box, sgear4)) hitSomething = true;
+                else if (sgear5 && IsColliding(m_Box, sgear5)) hitSomething = true;
+                else if (b1gear1 && IsColliding(m_Box, b1gear1)) hitSomething = true;
+                else if (b2gear1 && IsColliding(m_Box, b2gear1)) hitSomething = true;
+                else if (b2gear2 && IsColliding(m_Box, b2gear2)) hitSomething = true;
+                else if (b2gear3 && IsColliding(m_Box, b2gear3)) hitSomething = true;
 
                 if (hitSomething) {
                     m_Box->m_Transform.translation.x -= finalDx;
@@ -109,13 +101,15 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
                     }
                 }
 
-                // 改為遍歷向量 m_Gears
-                for (auto& gear : m_Gears) {
-                    if (IsColliding(m_Box, gear)) {
-                        hitSomething = true;
-                        break;
-                    }
-                }
+                if (sgear1 && IsColliding(m_Box, sgear1)) hitSomething = true;
+                else if (sgear2 && IsColliding(m_Box, sgear2)) hitSomething = true;
+                else if (sgear3 && IsColliding(m_Box, sgear3)) hitSomething = true;
+                else if (sgear4 && IsColliding(m_Box, sgear4)) hitSomething = true;
+                else if (sgear5 && IsColliding(m_Box, sgear5)) hitSomething = true;
+                else if (b1gear1 && IsColliding(m_Box, b1gear1)) hitSomething = true;
+                else if (b2gear1 && IsColliding(m_Box, b2gear1)) hitSomething = true;
+                else if (b2gear2 && IsColliding(m_Box, b2gear2)) hitSomething = true;
+                else if (b2gear3 && IsColliding(m_Box, b2gear3)) hitSomething = true;
 
                 if (hitSomething) {
                     m_Box->m_Transform.translation.x -= finalDx;
@@ -135,12 +129,15 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         character->m_Transform.translation.x += dx; // 先移動
         
         bool hitGear = false;
-        for (auto& gear : m_Gears) {
-            if (IsColliding(character, gear)) {
-                hitGear = true;
-                break;
-            }
-        }
+        if (sgear1 && IsColliding(character, sgear1)) hitGear = true;
+        else if (sgear2 && IsColliding(character, sgear2)) hitGear = true;
+        else if (sgear3 && IsColliding(character, sgear3)) hitGear = true;
+        else if (sgear4 && IsColliding(character, sgear4)) hitGear = true;
+        else if (sgear5 && IsColliding(character, sgear5)) hitGear = true;
+        else if (b1gear1 && IsColliding(character, b1gear1)) hitGear = true;
+        else if (b2gear1 && IsColliding(character, b2gear1)) hitGear = true;
+        else if (b2gear2 && IsColliding(character, b2gear2)) hitGear = true;
+        else if (b2gear3 && IsColliding(character, b2gear3)) hitGear = true;
 
         if (hitGear) {
             character->m_Transform.translation.x -= dx; // 撞到機關才退回
@@ -148,26 +145,7 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         } 
         // 【修正】把原本不管怎樣都減回來的 else 整段刪除！沒撞到就不動它！
     };
-    // auto handleHorizontalObstacle = [&](std::shared_ptr<Util::GameObject> character, float& dx) {
-    //     if (dx == 0) return;
-    //     character->m_Transform.translation.x += dx;
-        
-    //     bool hitGear = false;
-    //     // 改為遍歷向量 m_Gears
-    //     for (auto& gear : m_Gears) {
-    //         if (IsColliding(character, gear)) {
-    //             hitGear = true;
-    //             break;
-    //         }
-    //     }
 
-    //     if (hitGear) {
-    //         character->m_Transform.translation.x -= dx;
-    //         dx = 0;
-    //     } else {
-    //         character->m_Transform.translation.x -= dx;
-    //     }
-    // };
     handleHorizontalObstacle(m_Ice, iceDx);
     handleHorizontalObstacle(m_Fire, fireDx);
 
@@ -180,25 +158,22 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
     std::vector<std::shared_ptr<Util::GameObject>> collisionGroup = m_Stones;
     if (m_Box) collisionGroup.push_back(m_Box);
     
-    // 將所有向量中的 Gear 加入碰撞群組
-    for (auto& gear : m_Gears) {
-        collisionGroup.push_back(gear);
-    }
+    if (sgear1) collisionGroup.push_back(sgear1);
+    if (sgear2) collisionGroup.push_back(sgear2);
+    if (sgear3) collisionGroup.push_back(sgear3);
+    if (sgear4) collisionGroup.push_back(sgear4);
+    if (sgear5) collisionGroup.push_back(sgear5);
+
+    if (b1gear1) collisionGroup.push_back(b1gear1);
+
+    if (b2gear1) collisionGroup.push_back(b2gear1);
+    if (b2gear2) collisionGroup.push_back(b2gear2);
+    if (b2gear3) collisionGroup.push_back(b2gear3);
 
     for (const auto& obj : collisionGroup) {
         float objW = obj->GetScaledSize().x;
         float objH = obj->GetScaledSize().y;
 
-        // 處理向量中索引為 1 的 Gear2 旋轉邏輯
-        // if (m_Gears.size() >= 2 && obj == m_Gears[1]) {
-        //     std::swap(objW, objH);
-
-        // }
-
-        // 只有第三個 gear，也就是新的直向 gear，要交換寬高
-        if (m_Gears.size() >= 3 && obj == m_Gears[2]) {
-            std::swap(objW, objH);
-        }
 
         float objLeft   = obj->m_Transform.translation.x - (objW / 2.0f);
         float objRight  = obj->m_Transform.translation.x + (objW / 2.0f);
@@ -384,9 +359,18 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
 
     // 箱子垂直碰撞邏輯
     std::vector<std::shared_ptr<Util::GameObject>> boxCollisionGroup = m_Stones;
-    for (auto& gear : m_Gears) {
-        boxCollisionGroup.push_back(gear);
-    }
+
+    if (sgear1) boxCollisionGroup.push_back(sgear1);
+    if (sgear2) boxCollisionGroup.push_back(sgear2);
+    if (sgear3) boxCollisionGroup.push_back(sgear3);
+    if (sgear4) boxCollisionGroup.push_back(sgear4);
+    if (sgear5) boxCollisionGroup.push_back(sgear5);
+
+    if (b1gear1) boxCollisionGroup.push_back(b1gear1);
+
+    if (b2gear1) boxCollisionGroup.push_back(b2gear1);
+    if (b2gear2) boxCollisionGroup.push_back(b2gear2);
+    if (b2gear3) boxCollisionGroup.push_back(b2gear3);
 
     if (m_Box) {
         m_BoxOnGround = false;
@@ -438,16 +422,6 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         float platHalfW = platform->GetScaledSize().x / 2.0f;
         float platHalfH = platform->GetScaledSize().y / 2.0f;
 
-        // 針對向量中的第二個 Gear 進行寬高交換邏輯
-        // if (m_Gears.size() >= 2 && platform == m_Gears[1]) {
-        //     std::swap(platHalfW, platHalfH);
-        // }
-
-        // 只有第三個 gear，也就是新的直向 gear，要交換寬高
-        if (m_Gears.size() >= 3 && platform == m_Gears[2]) {
-            std::swap(platHalfW, platHalfH);
-        }
-
         float charLeft = character->m_Transform.translation.x - charHalfW;
         float charRight = character->m_Transform.translation.x + charHalfW;
         float charBottom = character->m_Transform.translation.y - charHalfH;
@@ -459,92 +433,75 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
         return (charRight > platLeft) && (charLeft < platRight) && std::abs(charBottom - platTop) < 5.0f;
     };
 
-    // 向量化機關邏輯：按鈕 (Buttons)
-    // btn1 + btn2 控制 gear1
-    // btn3 + btn4 控制 gear2
+    // ===== 1. 按鈕狀態更新 =====
+    auto checkButton = [&](std::shared_ptr<Util::GameObject> btn) -> bool {
+        if (!btn) return false;
+        bool pressed = IsColliding(m_Ice, btn) || IsColliding(m_Fire, btn) || (m_Box && IsColliding(m_Box, btn));
+        btn->SetVisible(!pressed);
+        return pressed;
+    };
 
-    std::vector<bool> buttonPressed(m_Buttons.size(), false);
+    bool btn1Pressed = checkButton(button1);
+    bool btn2_1_1Pressed = checkButton(button2_1_1);
+    bool btn2_1_2Pressed = checkButton(button2_1_2);
+    bool btn2_2_1Pressed = checkButton(button2_2_1);
+    bool btn2_2_2Pressed = checkButton(button2_2_2);
+    bool btn2_3_1Pressed = checkButton(button2_3_1);
+    bool btn2_3_2Pressed = checkButton(button2_3_2);
 
-    for (size_t i = 0; i < m_Buttons.size(); ++i) {
-        buttonPressed[i] =
-            IsColliding(m_Ice, m_Buttons[i]) ||
-            IsColliding(m_Fire, m_Buttons[i]) ||
-            (m_Box && IsColliding(m_Box, m_Buttons[i]));
 
-        m_Buttons[i]->SetVisible(!buttonPressed[i]);
-    }
+    // ===== 2. 拉桿狀態更新 =====
+    auto handleSingleSwitch = [&](std::shared_ptr<Util::GameObject> character, float dx, bool isIce, std::shared_ptr<Util::GameObject> sw, bool& swState) {
+        if (!sw || !character) return;
+        if (IsColliding(character, sw)) {
+            float charX = character->m_Transform.translation.x;
+            float swX = sw->m_Transform.translation.x;
+            bool pushingRight = isIce ? keys[SDL_SCANCODE_D] : keys[SDL_SCANCODE_RIGHT];
+            bool pushingLeft = isIce ? keys[SDL_SCANCODE_A] : keys[SDL_SCANCODE_LEFT];
 
-    bool gear0ButtonPressed = false;
-    bool gear1ButtonPressed = false;
-
-    if (m_Buttons.size() >= 2) {
-        gear0ButtonPressed = buttonPressed[0] || buttonPressed[1];
-    }
-
-    if (m_Buttons.size() >= 4) {
-        gear1ButtonPressed = buttonPressed[2] || buttonPressed[3];
-    }
-
-    // 向量化機關邏輯：拉桿 (Switches)
-    auto handleSwitch = [&](std::shared_ptr<Util::GameObject> character, float dx, bool isIce) {
-        for (size_t i = 0; i < m_Switches.size(); ++i) {
-            if (IsColliding(character, m_Switches[i])) {
-                float charX = character->m_Transform.translation.x;
-                float swX = m_Switches[i]->m_Transform.translation.x;
-                bool pushingRight = isIce ? keys[SDL_SCANCODE_D] : keys[SDL_SCANCODE_RIGHT];
-                bool pushingLeft = isIce ? keys[SDL_SCANCODE_A] : keys[SDL_SCANCODE_LEFT];
-
-                if (charX < swX && dx > 0 && pushingRight && m_SwitchStates[i]) {
-                    m_SwitchStates[i] = false;
-                    m_Switches[i]->SetDrawable(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"));
-                } else if (charX > swX && dx < 0 && pushingLeft && !m_SwitchStates[i]) {
-                    m_SwitchStates[i] = true;
-                    m_Switches[i]->SetDrawable(std::make_shared<Util::Image>(PIC_PATH + "switch1_2.png"));
-                }
+            if (charX < swX && dx > 0 && pushingRight && swState) {
+                swState = false;
+                sw->SetDrawable(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"));
+            } else if (charX > swX && dx < 0 && pushingLeft && !swState) {
+                swState = true;
+                sw->SetDrawable(std::make_shared<Util::Image>(PIC_PATH + "switch1_2.png"));
             }
         }
     };
-    handleSwitch(m_Ice, iceDx, true);
-    handleSwitch(m_Fire, fireDx, false);
-    // 8. 處理 Gears 位移與角色同步 (向量化遍歷)
-    for (size_t i = 0; i < m_Gears.size(); ++i) {
-        if (!m_Gears[i]) continue;
 
-        glm::vec2 oldPos = m_Gears[i]->m_Transform.translation;
-        bool iceOn = isStandingOnTop(m_Ice, m_Gears[i]);
-        bool fireOn = isStandingOnTop(m_Fire, m_Gears[i]);
+    handleSingleSwitch(m_Ice, iceDx, true, switch1, switch1State);
+    handleSingleSwitch(m_Fire, fireDx, false, switch1, switch1State);
+    handleSingleSwitch(m_Ice, iceDx, true, switch2, switch2State);
+    handleSingleSwitch(m_Fire, fireDx, false, switch2, switch2State);
+    handleSingleSwitch(m_Ice, iceDx, true, switch3, switch3State);
+    handleSingleSwitch(m_Fire, fireDx, false, switch3, switch3State);
+    handleSingleSwitch(m_Ice, iceDx, true, switch4, switch4State);
+    handleSingleSwitch(m_Fire, fireDx, false, switch4, switch4State);
+    handleSingleSwitch(m_Ice, iceDx, true, switch5, switch5State);
+    handleSingleSwitch(m_Fire, fireDx, false, switch5, switch5State);
 
-        // 邏輯保持：i=0 受按鈕控制, i=1 受拉桿控制
-        float targetY = m_GearOriginalPositions[i].y;
-        if (i == 0) {
-            float moveY = -75.0f;
-            targetY = gear0ButtonPressed
-                ? (m_GearOriginalPositions[0].y + moveY)
-                : m_GearOriginalPositions[0].y;
-        }
-        else if (i == 1) {
-            bool switchOn = !m_SwitchStates.empty() && m_SwitchStates[0];
 
-            targetY = (gear1ButtonPressed || switchOn)
-                ? (m_GearOriginalPositions[1].y - 75.0f)
-                : m_GearOriginalPositions[1].y;
-        }
-        else if (i == 2) {
-            float moveY = 75.0f;
-
-            targetY = gear0ButtonPressed
-                ? (m_GearOriginalPositions[2].y + moveY)
-                : m_GearOriginalPositions[2].y;
-        }
+    // ===== 3. 機關位移與角色同步 =====
+    auto moveGear = [&](std::shared_ptr<Util::GameObject> gear, glm::vec2 targetPos) {
+        if (!gear) return;
+        glm::vec2 oldPos = gear->m_Transform.translation;
+        bool iceOn = isStandingOnTop(m_Ice, gear);
+        bool fireOn = isStandingOnTop(m_Fire, gear);
 
         float speed = 2.0f;
-        if (m_Gears[i]->m_Transform.translation.y < targetY) {
-            m_Gears[i]->m_Transform.translation.y = std::min(m_Gears[i]->m_Transform.translation.y + speed, targetY);
-        } else if (m_Gears[i]->m_Transform.translation.y > targetY) {
-            m_Gears[i]->m_Transform.translation.y = std::max(m_Gears[i]->m_Transform.translation.y - speed, targetY);
+        if (gear->m_Transform.translation.x < targetPos.x) {
+            gear->m_Transform.translation.x = std::min(gear->m_Transform.translation.x + speed, targetPos.x);
+        } else if (gear->m_Transform.translation.x > targetPos.x) {
+            gear->m_Transform.translation.x = std::max(gear->m_Transform.translation.x - speed, targetPos.x);
         }
 
-        glm::vec2 delta = m_Gears[i]->m_Transform.translation - oldPos;
+        if (gear->m_Transform.translation.y < targetPos.y) {
+            gear->m_Transform.translation.y = std::min(gear->m_Transform.translation.y + speed, targetPos.y);
+        } else if (gear->m_Transform.translation.y > targetPos.y) {
+            gear->m_Transform.translation.y = std::max(gear->m_Transform.translation.y - speed, targetPos.y);
+        }
+
+        glm::vec2 delta = gear->m_Transform.translation - oldPos;
         if (delta.x != 0.0f || delta.y != 0.0f) {
             if (iceOn) {
                 m_Ice->m_Transform.translation += delta;
@@ -557,8 +514,63 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
                 m_FireOnGround = true;
             }
         }
+    };
+
+    glm::vec2 target;
+
+    if (sgear1) {
+        target = sgear1OriginalPos;
+        if (switch1State) target.y -= 75.0f;
+        moveGear(sgear1, target);
     }
 
+    if (b2gear1) {
+        target = b2gear1OriginalPos;
+        if (btn2_1_1Pressed || btn2_1_2Pressed) target.y -= 75.0f;
+        moveGear(b2gear1, target);
+    }
+
+    if (b2gear2) {
+        target = b2gear2OriginalPos;
+        if (btn2_2_1Pressed || btn2_2_2Pressed) target.y -= 100.0f;
+        moveGear(b2gear2, target);
+    }
+
+    if (b2gear3) {
+        target = b2gear3OriginalPos;
+        if (btn2_3_1Pressed || btn2_3_2Pressed) target.x -= 92.0f;
+        moveGear(b2gear3, target);
+    }
+
+    if (sgear2) {
+        target = sgear2OriginalPos;
+        if (switch2State) target.y -= 75.0f;
+        moveGear(sgear2, target);
+    }
+
+    if (b1gear1) {
+        target = b1gear1OriginalPos;
+        if (btn1Pressed) target.y -= 75.0f;
+        moveGear(b1gear1, target);
+    }
+
+    if (sgear3) {
+        target = sgear3OriginalPos;
+        if (switch3State) target.x += 75.0f;
+        moveGear(sgear3, target);
+    }
+
+    if (sgear4) {
+        target = sgear4OriginalPos;
+        if (switch4State) target.x -= 75.0f;
+        moveGear(sgear4, target);
+    }
+
+    if (sgear5) {
+        target = sgear5OriginalPos;
+        if (switch5State) target.x += 75.0f;
+        moveGear(sgear5, target);
+    }
     // 9. 門的動畫處理與關卡切換
     m_IceDoorOpening = IsColliding(m_Ice, m_IceDoor);
     m_FireDoorOpening = IsColliding(m_Fire, m_FireDoor);
@@ -591,24 +603,25 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
 
     // 10. 陷阱與死亡判定
     bool iceDead = false, fireDead = false;
-    for (const auto& trap : m_Traps) {
-        if (IsColliding(m_Ice, trap)) { iceDead = true; break; }
-    }
-    if (!iceDead) {
-        for (const auto& trap : m_IceTraps) {
+    if (!ischeatingmode){
+        for (const auto& trap : m_Traps) {
             if (IsColliding(m_Ice, trap)) { iceDead = true; break; }
         }
-    }
+        if (!iceDead) {
+            for (const auto& trap : m_IceTraps) {
+                if (IsColliding(m_Ice, trap)) { iceDead = true; break; }
+            }
+        }
 
-    for (const auto& trap : m_Traps) {
-        if (IsColliding(m_Fire, trap)) { fireDead = true; break; }
-    }
-    if (!fireDead) {
-        for (const auto& trap : m_FireTraps) {
+        for (const auto& trap : m_Traps) {
             if (IsColliding(m_Fire, trap)) { fireDead = true; break; }
         }
+        if (!fireDead) {
+            for (const auto& trap : m_FireTraps) {
+                if (IsColliding(m_Fire, trap)) { fireDead = true; break; }
+            }
+        }
     }
-
     if (iceDead || fireDead) {
         m_CurrentState = State::DEAD;
         m_DeadScreen->SetVisible(true);
