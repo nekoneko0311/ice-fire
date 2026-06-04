@@ -14,6 +14,14 @@ void App::Start() {
     m_DeadScreen->SetVisible(false);
     m_Root->AddChild(m_DeadScreen);
 
+    m_PassScreen = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "pass.png"), 20.0f);
+    m_PassScreen->SetVisible(false);
+    m_Root->AddChild(m_PassScreen);
+
+    m_SurpriseScreen = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "surprise.png"), 20.0f);
+    m_SurpriseScreen->SetVisible(false);
+    m_Root->AddChild(m_SurpriseScreen);
+
     m_Background = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "background.png"), -10.0f);
     m_Root->AddChild(m_Background);
 

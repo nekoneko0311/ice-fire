@@ -54,6 +54,8 @@ private:
     std::shared_ptr<Util::Renderer> m_Root;
     std::shared_ptr<Util::GameObject> m_PauseScreen;
     std::shared_ptr<Util::GameObject> m_DeadScreen;
+    std::shared_ptr<Util::GameObject> m_PassScreen;
+    std::shared_ptr<Util::GameObject> m_SurpriseScreen;
     std::shared_ptr<Util::GameObject> m_Background;
     std::shared_ptr<Util::GameObject> m_Ice;
     std::shared_ptr<Util::GameObject> m_Fire;

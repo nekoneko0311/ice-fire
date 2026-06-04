@@ -597,9 +597,10 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
     if (m_IceDoorFrameIndex == (int)m_IceDoorFrames.size() - 1 &&
         m_FireDoorFrameIndex == (int)m_FireDoorFrames.size() - 1 &&
         IsColliding(m_Ice, m_IceDoor) && IsColliding(m_Fire, m_FireDoor)) {
-        LoadLevel(m_CurrentLevelNum + 1);
-        return;
-    }
+            m_CurrentLevelNum ++;
+            LoadLevel(m_CurrentLevelNum);
+            return;
+        }
 
     // 10. 陷阱與死亡判定
     bool iceDead = false, fireDead = false;

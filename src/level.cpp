@@ -10,7 +10,6 @@
 void App::LoadLevel(int level) {
     ClearLevel();
 
-    m_CurrentLevelNum = level;
     m_Score = 0;
 
     m_CurrentState = State::UPDATE;
@@ -453,8 +452,8 @@ void App::LoadLevel(int level) {
         m_IceVelocityY = 0;
         m_FireVelocityY = 0;
 
-        m_IceDoor->m_Transform.translation = { 220.0f, 0.0f };
-        m_FireDoor->m_Transform.translation = { -220.0f, 0.0f };
+        m_IceDoor->m_Transform.translation = { 220.0f, -10.0f };
+        m_FireDoor->m_Transform.translation = { -220.0f, -10.0f };
 
         m_IceDoorFrameIndex = 0;
         m_FireDoorFrameIndex = 0;

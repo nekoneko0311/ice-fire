@@ -51,6 +51,17 @@ void App::Update() {
     }
     if (m_CurrentState == State::PAUSE) { m_Root->Update(); return; }
 
+    //通關
+    if (m_CurrentLevelNum == 6){
+        m_PassScreen->SetVisible(m_CurrentState == State::UPDATE);
+    }
+
+    //驚喜
+        if (m_CurrentLevelNum == 7){
+        m_CurrentState = State::PAUSE;
+        m_SurpriseScreen->SetVisible(m_CurrentState == State::PAUSE);
+    }
+
     //跳關
     if (Util::Input::IsKeyDown(Util::Keycode::N)) {
         m_CurrentLevelNum++;
