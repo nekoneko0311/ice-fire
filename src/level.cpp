@@ -413,23 +413,23 @@ void App::LoadLevel(int level) {
 
         // --- 按鈕 1 與其控制的機關 (button1 & b1gear1) ---
         button1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "button1.png"), -1.5f);
-        button1->m_Transform.translation = { 150.0f, -80.0f };
+        button1->m_Transform.translation = { 300.0f, 10.0f };
         m_Root->AddChild(button1);
 
-        b1gear1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
-        b1gear1->m_Transform.translation = { 300.0f, 0.0f };
+        b1gear1 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear5.png"), -1.0f);
+        b1gear1->m_Transform.translation = { -275.0f, 250.0f };
         b1gear1OriginalPos = b1gear1->m_Transform.translation; // 記錄原始位置
         m_Root->AddChild(b1gear1);
 
 
         // --- 拉桿 2 與其控制的機關 (switch2 & sgear2) ---
         switch2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
-        switch2->m_Transform.translation = { -150.0f, -80.0f };
+        switch2->m_Transform.translation = { -355.0f, 245.0f };
         switch2State = false; // 初始狀態設為關閉
         m_Root->AddChild(switch2);
 
-        sgear2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
-        sgear2->m_Transform.translation = { -300.0f, 0.0f };
+        sgear2 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear6.png"), -1.0f);
+        sgear2->m_Transform.translation = { -200.0f, -150.0f };
         sgear2OriginalPos = sgear2->m_Transform.translation; // 記錄原始位置
         m_Root->AddChild(sgear2);
         // ============= 比重量平台 ==================
@@ -495,36 +495,36 @@ void App::LoadLevel(int level) {
 
         // --- 拉桿 3 與其控制的機關 (switch3 & sgear3) ---
         switch3 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
-        switch3->m_Transform.translation = { -200.0f, -100.0f };
+        switch3->m_Transform.translation = { -130.0f, -170.0f };
         switch3State = false; 
         m_Root->AddChild(switch3);
 
         sgear3 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
-        sgear3->m_Transform.translation = { -200.0f, 100.0f };
+        sgear3->m_Transform.translation = { -46.0f, -250.0f };
         sgear3OriginalPos = sgear3->m_Transform.translation; 
         m_Root->AddChild(sgear3);
 
 
         // --- 拉桿 4 與其控制的機關 (switch4 & sgear4) ---
         switch4 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
-        switch4->m_Transform.translation = { 0.0f, -100.0f };
+        switch4->m_Transform.translation = { 130.0f, -32.0f };
         switch4State = false; 
         m_Root->AddChild(switch4);
 
         sgear4 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear2.png"), -1.0f);
-        sgear4->m_Transform.translation = { 0.0f, 100.0f };
+        sgear4->m_Transform.translation = { 46.0f, -112.0f };
         sgear4OriginalPos = sgear4->m_Transform.translation; 
         m_Root->AddChild(sgear4);
 
 
         // --- 拉桿 5 與其控制的機關 (switch5 & sgear5) ---
         switch5 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "switch1_1.png"), -1.5f);
-        switch5->m_Transform.translation = { 200.0f, -100.0f };
+        switch5->m_Transform.translation = { -130.0f, 106.0f };
         switch5State = false; 
         m_Root->AddChild(switch5);
 
-        sgear5 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear1.png"), -1.0f);
-        sgear5->m_Transform.translation = { 200.0f, 100.0f };
+        sgear5 = std::make_shared<Util::GameObject>(std::make_shared<Util::Image>(PIC_PATH + "gear3.png"), -1.0f);
+        sgear5->m_Transform.translation = { -46.0f, 26.0f };
         sgear5OriginalPos = sgear5->m_Transform.translation; 
         m_Root->AddChild(sgear5);
 
