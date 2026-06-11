@@ -1,19 +1,14 @@
-# PTSD Template
+# Ice-fire
 
-This is a [PTSD](https://github.com/ntut-open-source-club/practical-tools-for-simple-design) framework template for students taking OOPL2024s.
+## Start
 
-## Quick Start
-
-1. Use this template to create a new repository
-   ![github screenshot](https://github.com/ntut-rick/ptsd-template/assets/126899559/ef62242f-03ed-481d-b858-12b730c09beb)
-
-2. Clone your repository
+1. Clone the game
 
    ```bash
-   git clone YOUR_GIT_URL --recursive
+   git clone git@github.com:nekoneko0311/ice-fire.git --recursive
    ```
 
-3. Build your project
+2. Build
 
   > [!WARNING]
   > Please build your project in `Debug` because our `Release` path is broken D:
