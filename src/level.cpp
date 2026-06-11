@@ -432,27 +432,32 @@ void App::LoadLevel(int level) {
         sgear2->m_Transform.translation = { -200.0f, -150.0f };
         sgear2OriginalPos = sgear2->m_Transform.translation; // 記錄原始位置
         m_Root->AddChild(sgear2);
+
         // ============= 比重量平台 ==================
-
         m_BalanceRopePlatform = std::make_shared<BalanceRopePlatform>(
-        PIC_PATH + "wood.png",
-        PIC_PATH + "chain_left.png",
-        PIC_PATH + "chain_link.png",
-        PIC_PATH + "wheel.png",
+            PIC_PATH + "wood.png",
+            PIC_PATH + "chain_left.png",
+            PIC_PATH + "chain_link.png",
+            PIC_PATH + "wheel.png",
 
-        glm::vec2(-100.0f, -30.0f), // 整組位置，X 越小越左
-        250.0f,                     // 左右平台距離中心
-        -250.0f,                    // 木板平衡時 Y
-        100.0f,                     // 輪子 Y，越大鏈越長
+            glm::vec2(-95.0f, -30.0f),
+            303.0f,
+            0.0f,        // baseBoardY 會被左右初始高度重新計算，這裡不重要
+            300.0f,
 
-        130.0f,                     // 木板碰撞寬
-        18.0f,                      // 木板碰撞高
-        -300.0f,                    // 最低 Y，越小掉越低
+            130.0f,
+            18.0f,
 
-        glm::vec2(0.55f, 0.55f),    // 木板 scale
-        glm::vec2(0.55f, 0.55f),    // V 鏈 scale
-        glm::vec2(0.45f, 0.45f),    // 小鏈節 scale
-        glm::vec2(0.45f, 0.45f)     // 輪子 scale
+            -320.0f,     // 左邊最低高度
+            -126.0f,     // 右邊最低高度
+
+            -600.0f,     // 左邊初始高度
+            200.0f,      // 右邊初始高度
+
+            glm::vec2(0.55f, 0.55f),
+            glm::vec2(0.55f, 0.55f),
+            glm::vec2(0.45f, 0.45f),
+            glm::vec2(0.45f, 0.45f)
         );
 
         for (auto& obj : m_BalanceRopePlatform->GetAllObjects()) {
@@ -475,8 +480,8 @@ void App::LoadLevel(int level) {
         m_IceVelocityY = 0;
         m_FireVelocityY = 0;
 
-        m_IceDoor->m_Transform.translation = { 220.0f, -10.0f };
-        m_FireDoor->m_Transform.translation = { -220.0f, -10.0f };
+        m_FireDoor->m_Transform.translation = { 220.0f, -10.0f };
+        m_IceDoor->m_Transform.translation = { -220.0f, -10.0f };
 
         m_IceDoorFrameIndex = 0;
         m_FireDoorFrameIndex = 0;
@@ -527,6 +532,37 @@ void App::LoadLevel(int level) {
         sgear5->m_Transform.translation = { -46.0f, 26.0f };
         sgear5OriginalPos = sgear5->m_Transform.translation; 
         m_Root->AddChild(sgear5);
+
+        // ============= 比重量平台 ==================
+        m_BalanceRopePlatform = std::make_shared<BalanceRopePlatform>(
+            PIC_PATH + "wood.png",
+            PIC_PATH + "chain_left.png",
+            PIC_PATH + "chain_link.png",
+            PIC_PATH + "wheel.png",
+
+            glm::vec2(0.0f, -30.0f),
+            360.0f,
+            0.0f,        // baseBoardY 會被左右初始高度重新計算，這裡不重要
+            300.0f,
+
+            130.0f,
+            18.0f,
+
+            -310.0f,     // 左邊最低高度
+            -310.0f,     // 右邊最低高度
+
+            -230.0f,     // 左邊初始高度
+            200.0f,      // 右邊初始高度
+
+            glm::vec2(0.55f, 0.55f),
+            glm::vec2(0.55f, 0.55f),
+            glm::vec2(0.45f, 0.45f),
+            glm::vec2(0.45f, 0.45f)
+        );
+
+        for (auto& obj : m_BalanceRopePlatform->GetAllObjects()) {
+            m_Root->AddChild(obj);
+        }
 
         InitDiamonds(
         {

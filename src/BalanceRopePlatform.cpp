@@ -15,7 +15,10 @@ BalanceRopePlatform::BalanceRopePlatform(
     float topWheelY,
     float boardWidth,
     float boardHeight,
-    float floorY,
+    float leftFloorY,
+    float rightFloorY,
+    float leftInitialY,
+    float rightInitialY,
     const glm::vec2& boardScale,
     const glm::vec2& vChainScale,
     const glm::vec2& ropeLinkScale,
@@ -27,7 +30,8 @@ BalanceRopePlatform::BalanceRopePlatform(
       m_TopWheelY(topWheelY),
       m_BoardWidth(boardWidth),
       m_BoardHeight(boardHeight),
-      m_FloorY(floorY),
+      m_LeftFloorY(leftFloorY),
+      m_RightFloorY(rightFloorY),
       m_BoardScale(boardScale),
       m_VChainScale(vChainScale),
       m_RopeLinkScale(ropeLinkScale),
@@ -72,24 +76,49 @@ BalanceRopePlatform::BalanceRopePlatform(
     m_LeftWheel->m_Transform.scale = m_WheelScale;
     m_RightWheel->m_Transform.scale = m_WheelScale;
 
-    m_LeftBoardY = m_BaseBoardY;
-    m_RightBoardY = m_BaseBoardY;
+    /*
+        leftFloorY / rightFloorY：
+            只代表左右最低高度
 
+        leftInitialY / rightInitialY：
+            代表左右一開始的位置
 
-    m_RopeOffset = 0.0f;
-    m_TargetRopeOffset = 0.0f;
-    m_LastRopeOffset = 0.0f;
+        公式：
+            leftY  = baseY - offset
+            rightY = baseY + offset
+
+        反推：
+            baseY  = (leftInitialY + rightInitialY) / 2
+            offset = (rightInitialY - leftInitialY) / 2
+    */
+
+    float visualHalfBoardH = m_LeftBoard->GetScaledSize().y / 2.0f;
+    float floorPadding = 4.0f;
+
+    // 地板表面 Y 轉成木板中心最低 Y
+    float leftDownCenterY = m_LeftFloorY + visualHalfBoardH + floorPadding;
+    float rightDownCenterY = m_RightFloorY + visualHalfBoardH + floorPadding;
+
+    // 初始高度先各自限制，不讓木板一開始低於地板
+    leftInitialY = std::max(leftInitialY, leftDownCenterY);
+    rightInitialY = std::max(rightInitialY, rightDownCenterY);
+
+    // 用修正後的左右初始高度反推 base 和 offset
+    m_BaseBoardY = (leftInitialY + rightInitialY) / 2.0f;
+    m_RopeOffset = (rightInitialY - leftInitialY) / 2.0f;
+
+    // 左右最多下降量
+    m_LeftMaxRopeOffset = std::max(0.0f, m_BaseBoardY - leftDownCenterY);
+    m_RightMaxRopeOffset = std::max(0.0f, m_BaseBoardY - rightDownCenterY);
+
+    m_TargetRopeOffset = m_RopeOffset;
+    m_LastRopeOffset = m_RopeOffset;
     m_RopeScroll = 0.0f;
 
-    float halfBoardH = (m_BoardHeight * m_BoardScale.y) / 2.0f;
-    float downCenterY = m_FloorY + halfBoardH;
-
-    // Y 越小越下面，所以 baseBoardY 到地板的距離
-    m_MaxRopeOffset = std::abs(m_BaseBoardY - downCenterY);
-
-    CreateRopeLinks(ropeLinkPath);
     m_LeftBoardY = m_BaseBoardY - m_RopeOffset;
     m_RightBoardY = m_BaseBoardY + m_RopeOffset;
+
+    CreateRopeLinks(ropeLinkPath);
     UpdateObjects();
 }
 
@@ -192,46 +221,73 @@ void BalanceRopePlatform::Update(float dt) {
 
     if (m_LeftWeight > m_RightWeight + EPS) {
         // 左邊比較重：左板下降、右板上升
-        m_TargetRopeOffset = m_MaxRopeOffset;
+        m_TargetRopeOffset = m_LeftMaxRopeOffset;
     }
     else if (m_RightWeight > m_LeftWeight + EPS) {
         // 右邊比較重：右板下降、左板上升
-        m_TargetRopeOffset = -m_MaxRopeOffset;
+        m_TargetRopeOffset = -m_RightMaxRopeOffset;
     }
     else {
-        // 不回彈版本：
-        // 1. 沒人站上去，不回到中間
-        // 2. 左右重量一樣，也不要回到中間
-        // 所以這裡不要改 m_TargetRopeOffset
-
+        // 不回彈：重量相同時停住
         if (hasLeftWeight || hasRightWeight) {
-            // 左右重量相等時，停在目前位置
             m_TargetRopeOffset = m_RopeOffset;
         }
-        // 如果完全沒重量，維持原本目標
-        // 這樣它會繼續走到之前比較重那邊的終點，不會回彈
     }
 
-    float t = m_MoveSpeed * dt;
-    if (t > 1.0f) {
-        t = 1.0f;
+    m_TargetRopeOffset = std::clamp(
+        m_TargetRopeOffset,
+        -m_RightMaxRopeOffset,
+        m_LeftMaxRopeOffset
+    );
+
+    float diff = m_TargetRopeOffset - m_RopeOffset;
+    float step = m_MoveSpeed * dt * 60.0f;
+
+    if (std::abs(diff) <= step) {
+        m_RopeOffset = m_TargetRopeOffset;
+    } else {
+        if (diff > 0.0f) {
+            m_RopeOffset += step;
+        } else {
+            m_RopeOffset -= step;
+        }
     }
 
-    m_RopeOffset += (m_TargetRopeOffset - m_RopeOffset) * t;
+    m_RopeOffset = std::clamp(
+        m_RopeOffset,
+        -m_RightMaxRopeOffset,
+        m_LeftMaxRopeOffset
+    );
 
-    // 靠近目標就直接貼齊，避免抖動
     if (std::abs(m_TargetRopeOffset - m_RopeOffset) < 0.05f) {
         m_RopeOffset = m_TargetRopeOffset;
     }
 
-    // 讓鏈條圖案沿路徑滑動
     float deltaOffset = m_RopeOffset - m_LastRopeOffset;
     m_RopeScroll += deltaOffset;
     m_LastRopeOffset = m_RopeOffset;
 
-    // 同一條鏈：一邊下降多少，另一邊上升多少
     m_LeftBoardY = m_BaseBoardY - m_RopeOffset;
     m_RightBoardY = m_BaseBoardY + m_RopeOffset;
+
+    // 保險：到底就停住，避免視覺穿地板
+    float visualHalfBoardH = m_LeftBoard->GetScaledSize().y / 2.0f;
+    float floorPadding = 4.0f;
+
+    float leftMinCenterY = m_LeftFloorY + visualHalfBoardH + floorPadding;
+    float rightMinCenterY = m_RightFloorY + visualHalfBoardH + floorPadding;
+
+    if (m_LeftBoardY < leftMinCenterY) {
+        m_LeftBoardY = leftMinCenterY;
+        m_RopeOffset = m_BaseBoardY - m_LeftBoardY;
+        m_TargetRopeOffset = m_RopeOffset;
+    }
+
+    if (m_RightBoardY < rightMinCenterY) {
+        m_RightBoardY = rightMinCenterY;
+        m_RopeOffset = m_RightBoardY - m_BaseBoardY;
+        m_TargetRopeOffset = m_RopeOffset;
+    }
 
     UpdateObjects();
 }
@@ -242,7 +298,6 @@ void BalanceRopePlatform::UpdateObjects() {
 
     float halfBoardH = (m_BoardHeight * m_BoardScale.y) / 2.0f;
 
-    // ===== 木板 =====
     m_LeftBoard->m_Transform.translation = {
         leftBoardX,
         m_LeftBoardY
@@ -256,7 +311,6 @@ void BalanceRopePlatform::UpdateObjects() {
     m_LeftBoard->m_Transform.rotation = 0.0f;
     m_RightBoard->m_Transform.rotation = 0.0f;
 
-    // ===== 輪子 =====
     m_LeftWheel->m_Transform.translation = {
         leftBoardX,
         m_TopWheelY
@@ -267,18 +321,15 @@ void BalanceRopePlatform::UpdateObjects() {
         m_TopWheelY
     };
 
-    // 讓輪子跟著鏈條轉
     m_LeftWheel->m_Transform.rotation = glm::radians(m_RopeScroll * 6.0f);
     m_RightWheel->m_Transform.rotation = glm::radians(m_RopeScroll * 6.0f);
 
-    // ===== V 字鏈 =====
     float leftBoardTopY = m_LeftBoardY + halfBoardH;
     float rightBoardTopY = m_RightBoardY + halfBoardH;
 
     float leftVHalfH = m_LeftVChain->GetScaledSize().y / 2.0f;
     float rightVHalfH = m_RightVChain->GetScaledSize().y / 2.0f;
 
-    // 讓 V 字鏈的底部貼在木板上
     float leftVCenterY = leftBoardTopY + leftVHalfH + m_VBoardGap;
     float rightVCenterY = rightBoardTopY + rightVHalfH + m_VBoardGap;
 
@@ -295,7 +346,6 @@ void BalanceRopePlatform::UpdateObjects() {
     m_LeftVChain->m_Transform.rotation = 0.0f;
     m_RightVChain->m_Transform.rotation = 0.0f;
 
-    // V 字鏈頂端的位置，也就是直鏈要接到的位置
     m_LeftHookY = leftVCenterY + leftVHalfH - m_VApexInset;
     m_RightHookY = rightVCenterY + rightVHalfH - m_VApexInset;
 
@@ -306,7 +356,6 @@ void BalanceRopePlatform::CreateRopeLinks(const std::string& ropeLinkPath) {
     m_RopeLinks.clear();
 
     float totalLen = GetRopeLength();
-
     int count = static_cast<int>(totalLen / 4.0f) + 120;
 
     for (int i = 0; i < count; i++) {
@@ -355,7 +404,6 @@ glm::vec2 BalanceRopePlatform::GetRopePoint(float distance) const {
         distance -= totalLen;
     }
 
-    // 左邊垂直鏈：左 hook 到左輪
     if (distance < leftVerticalLen) {
         float t = distance / leftVerticalLen;
         float y = m_LeftHookY + (m_TopWheelY - m_LeftHookY) * t;
@@ -364,7 +412,6 @@ glm::vec2 BalanceRopePlatform::GetRopePoint(float distance) const {
 
     distance -= leftVerticalLen;
 
-    // 上方鏈：左輪到右輪
     if (distance < topLen) {
         float t = distance / topLen;
         float x = leftX + (rightX - leftX) * t;
@@ -373,7 +420,6 @@ glm::vec2 BalanceRopePlatform::GetRopePoint(float distance) const {
 
     distance -= topLen;
 
-    // 右邊垂直鏈：右輪到右 hook
     if (rightVerticalLen <= 1.0f) {
         return { rightX, m_TopWheelY };
     }
@@ -422,9 +468,7 @@ void BalanceRopePlatform::UpdateRopeLinks() {
         if (len <= 1.0f) return;
 
         float spacing = 5.0f;
-
         float phase = getPhase(m_RopeScroll * scrollSign, spacing);
-
         float dir = (y2 > y1) ? 1.0f : -1.0f;
 
         for (float d = -phase; d <= len + spacing; d += spacing) {
@@ -435,10 +479,7 @@ void BalanceRopePlatform::UpdateRopeLinks() {
                 continue;
             }
 
-            placeLink(
-                glm::vec2(x, y),
-                0.0f
-            );
+            placeLink(glm::vec2(x, y), 0.0f);
         }
     };
 
@@ -447,9 +488,7 @@ void BalanceRopePlatform::UpdateRopeLinks() {
         if (len <= 1.0f) return;
 
         float spacing = 4.0f;
-
         float phase = getPhase(m_RopeScroll * scrollSign, spacing);
-
         float dir = (x2 > x1) ? 1.0f : -1.0f;
 
         for (float d = -phase; d <= len + spacing; d += spacing) {
@@ -459,20 +498,12 @@ void BalanceRopePlatform::UpdateRopeLinks() {
                 continue;
             }
 
-            placeLink(
-                glm::vec2(x, y),
-                glm::radians(90.0f)
-            );
+            placeLink(glm::vec2(x, y), glm::radians(90.0f));
         }
     };
 
-    // 左邊直鏈：往上 / 往下滑
     placeVertical(leftX, leftBottomY, leftTopY, 1.0f);
-
-    // 上方水平鏈：一定要吃 m_RopeScroll，不然看起來不會動
     placeHorizontal(leftX, rightX, m_TopWheelY, 1.0f);
-
-    // 右邊直鏈：方向跟左邊相反，才像同一條鏈繞過去
     placeVertical(rightX, rightTopY, rightBottomY, -1.0f);
 
     for (int i = index; i < static_cast<int>(m_RopeLinks.size()); i++) {
@@ -488,7 +519,6 @@ std::vector<std::shared_ptr<Util::GameObject>> BalanceRopePlatform::GetAllObject
         m_RightVChain
     };
 
-    // 鏈條放在木板和輪子之間
     for (auto& link : m_RopeLinks) {
         objects.push_back(link);
     }
