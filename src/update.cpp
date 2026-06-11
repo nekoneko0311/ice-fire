@@ -96,6 +96,11 @@ void App::Update() {
         m_Fan->ApplyWind(m_Fire, m_FireVelocityY, m_FireOnGround);
     }
 
+    if (m_Fan2) {
+        m_Fan2->ApplyWind(m_Ice, m_IceVelocityY, m_IceOnGround);
+        m_Fan2->ApplyWind(m_Fire, m_FireVelocityY, m_FireOnGround);
+    }
+
     // 3. 動畫與門的邏輯
     UpdateAnimations();
     CheckDiamondCollection();
@@ -202,12 +207,25 @@ void App::UpdateAnimations() {
     if (m_Fan) {
         m_Fan->UpdateAnimation();
     }
+    if (m_Fan2) {
+        m_Fan2->UpdateAnimation();
+    }
 
-
-    // 鑽石浮動
+     // 鑽石浮動
     m_DiamondFloatTime += m_DiamondFloatSpeed;
-    if (m_RedDiamond && !m_RedDiamondCollected)
-        m_RedDiamond->m_Transform.translation.y = m_RedDiamondBasePos.y + std::sin(m_DiamondFloatTime) * m_DiamondFloatRange;
-    if (m_BlueDiamond && !m_BlueDiamondCollected)
-        m_BlueDiamond->m_Transform.translation.y = m_BlueDiamondBasePos.y + std::sin(m_DiamondFloatTime) * m_DiamondFloatRange;
+    float offsetY = std::sin(m_DiamondFloatTime) * m_DiamondFloatRange;
+
+    for (size_t i = 0; i < m_RedDiamonds.size(); i++) {
+        if (m_RedDiamonds[i] && !m_RedDiamondCollected[i]) {
+            m_RedDiamonds[i]->m_Transform.translation.y =
+                m_RedDiamondBasePos[i].y + offsetY;
+        }
+    }
+
+    for (size_t i = 0; i < m_BlueDiamonds.size(); i++) {
+        if (m_BlueDiamonds[i] && !m_BlueDiamondCollected[i]) {
+            m_BlueDiamonds[i]->m_Transform.translation.y =
+                m_BlueDiamondBasePos[i].y + offsetY;
+        }
+    }
 }

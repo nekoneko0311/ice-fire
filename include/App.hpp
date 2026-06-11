@@ -185,19 +185,17 @@ private:
 
     // 電風扇
     std::shared_ptr<Fan> m_Fan;
-
-
-
-
+    std::shared_ptr<Fan> m_Fan2;
 
     // ===== 寶石 ========================================================================
-    std::shared_ptr<Util::GameObject> m_RedDiamond;
-    bool m_RedDiamondCollected = false;
-    std::shared_ptr<Util::GameObject> m_BlueDiamond;
-    bool m_BlueDiamondCollected = false;
+    std::vector<std::shared_ptr<Util::GameObject>> m_RedDiamonds;
+    std::vector<std::shared_ptr<Util::GameObject>> m_BlueDiamonds;
 
-    glm::vec2 m_RedDiamondBasePos;
-    glm::vec2 m_BlueDiamondBasePos;
+    std::vector<bool> m_RedDiamondCollected;
+    std::vector<bool> m_BlueDiamondCollected;
+
+    std::vector<glm::vec2> m_RedDiamondBasePos;
+    std::vector<glm::vec2> m_BlueDiamondBasePos;
 
     float m_DiamondFloatTime = 0.0f;
     float m_DiamondFloatSpeed = 0.02f;   // 飄浮速度
@@ -247,7 +245,10 @@ private:
     void HandleMechanics(float iceDx, float fireDx, const Uint8* keys);
     void UpdateAnimations();
 
-    void InitDiamonds();
+    void InitDiamonds(
+    const std::vector<glm::vec2>& redPositions,
+    const std::vector<glm::vec2>& bluePositions
+    );
     void UpdateDiamonds();
     void CheckDiamondCollection();
 

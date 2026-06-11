@@ -161,7 +161,16 @@ void App::LoadLevel(int level) {
         switch1State = false; // 初始狀態設為關閉
         m_Root->AddChild(switch1);
 
-        InitDiamonds();
+        InitDiamonds(
+        {
+            {-205.0f, 271.0f},
+            {-20.0f, 225.0f}
+        },
+        {
+            {-390.0f, 202.0f},
+            {70.0f, 225.0f}
+        }
+    );
     }
 
     else if (level == 2) {
@@ -256,36 +265,28 @@ void App::LoadLevel(int level) {
         m_Root->AddChild(m_ChainPlatform2->GetChainObject());
         m_Root->AddChild(m_ChainPlatform2->GetBoardObject());
 
-
-        // // ==========風扇=======================================================
-
-        // std::vector<std::string> fanFrames;
-        // std::vector<std::string> windFrames;
-
-        // for (int i = 1; i <= 4; i++) {
-        //     fanFrames.push_back(PIC_PATH + "fan(" + std::to_string(i) + ").png");
-        // }
-        // for (int i = 1; i <= 10; i++) {
-        //     windFrames.push_back(PIC_PATH + "wind(" + std::to_string(i) + ").png");
-        // }
-
-        // m_Fan = std::make_shared<Fan>(fanFrames, windFrames);
-        // m_Root->AddChild(m_Fan->GetWindObject());
-        // m_Root->AddChild(m_Fan->GetFanObject());
-        // m_Fan->SetActive(true);
-
-        // m_Fan->SetPosition(
-        //     glm::vec2(150.0f, -300.0f),
-        //     glm::vec2(0.0f, 120.0f)
-        // );
-
-        // m_Fan->SetScale(
-        //     glm::vec2(0.45f, 0.45f),
-        //     glm::vec2(0.45f, 0.85f)
-        // );
-        // // =====================================================================
-
-        InitDiamonds();
+        InitDiamonds(
+        {
+            {-230.0f, -295.0f},
+            {-137.0f, -295.0f},
+            {139.0f, -226.0f},
+            {230.0f, -226.0f},
+            {-95.0f, -119.0f},
+            {207.0f, -119.0f},
+            {-23.0f, 18.0f},
+            {-23.0f, 248.0f},
+        },
+        {
+            {-230.0f, -226.0f},
+            {-137.0f, -226.0f},
+            {139.0f, -295.0f},
+            {230.0f, -295.0f},
+            {95.0f, -119.0f},
+            {-205.0f, -119.0f},
+            {23.0f, 18.0f},
+            {23.0f, 248.0f},
+        }
+    );
     }
 
     else if (level == 3) {
@@ -312,35 +313,78 @@ void App::LoadLevel(int level) {
         m_BoxOnGround = false;
         m_Box->m_Transform.translation = { -9999.0f, -9999.0f };
 
-        // // ==========風扇=======================================================
+        // ========== 風扇 1 =======================================================
 
-         std::vector<std::string> fanFrames;
-         std::vector<std::string> windFrames;
+        std::vector<std::string> fanFrames;
+        std::vector<std::string> windFrames;
 
-         for (int i = 1; i <= 4; i++) {
-             fanFrames.push_back(PIC_PATH + "fan(" + std::to_string(i) + ").png");
-         }
-         for (int i = 1; i <= 10; i++) {
-             windFrames.push_back(PIC_PATH + "wind(" + std::to_string(i) + ").png");
-         }
+        for (int i = 1; i <= 4; i++) {
+            fanFrames.push_back(PIC_PATH + "fan(" + std::to_string(i) + ").png");
+        }
 
-         m_Fan = std::make_shared<Fan>(fanFrames, windFrames);
-         m_Root->AddChild(m_Fan->GetWindObject());
-         m_Root->AddChild(m_Fan->GetFanObject());
-         m_Fan->SetActive(true);
+        for (int i = 1; i <= 10; i++) {
+            windFrames.push_back(PIC_PATH + "wind(" + std::to_string(i) + ").png");
+        }
 
-         m_Fan->SetPosition(
-             glm::vec2(-390.0f, -7.0f),
-             glm::vec2(0.0f, 140.0f)
-         );
+        m_Fan = std::make_shared<Fan>(fanFrames, windFrames);
+        m_Root->AddChild(m_Fan->GetWindObject());
+        m_Root->AddChild(m_Fan->GetFanObject());
+        m_Fan->SetActive(true);
 
-         m_Fan->SetScale(
-             glm::vec2(0.45f, 0.45f),
-             glm::vec2(0.45f, 0.85f)
-         );
+        m_Fan->SetPosition(
+            glm::vec2(-390.0f, -7.0f),
+            glm::vec2(0.0f, 140.0f)
+        );
+
+        m_Fan->SetScale(
+            glm::vec2(0.45f, 0.45f),
+            glm::vec2(0.45f, 0.85f)
+        );
+
+
+        // ========== 風扇 2 =======================================================
+
+        m_Fan2 = std::make_shared<Fan>(fanFrames, windFrames);
+        m_Root->AddChild(m_Fan2->GetWindObject());
+        m_Root->AddChild(m_Fan2->GetFanObject());
+        m_Fan2->SetActive(true);
+
+        m_Fan2->SetPosition(
+            glm::vec2(390.0f, -7.0f),
+        glm::vec2(0.0f, 140.0f));
+
+        m_Fan2->SetScale(
+            glm::vec2(0.45f, 0.45f),
+            glm::vec2(0.45f, 0.85f)
+        );
         // // =====================================================================
 
-        InitDiamonds();
+        InitDiamonds(
+        {
+            {-240.0f, -295.0f},
+            {-170.0f, -295.0f},
+            {251.0f, -157.0f},
+            {184.0f, -157.0f},
+            {390.0f, 70.0f},
+            {390.0f, 140.0f},
+            {390.0f, 210.0f},
+            {138.0f, 271.0f},
+            {83.0f, 133.0f},
+            {-158.0f, 64.0f},
+        },
+        {
+            {240.0f, -295.0f},
+            {170.0f, -295.0f},
+            {-251.0f, -157.0f},
+            {-184.0f, -157.0f},
+            {-390.0f, 70.0f},
+            {-390.0f, 140.0f},
+            {-390.0f, 210.0f},
+            {-138.0f, 271.0f},
+            {-83.0f, 133.0f},
+            {158.0f, 64.0f},
+        }
+    );
     }
 
     else if (level == 4) {
@@ -415,35 +459,14 @@ void App::LoadLevel(int level) {
             m_Root->AddChild(obj);
         }
 
-        // // ==========風扇=======================================================
-
-        // std::vector<std::string> fanFrames;
-        // std::vector<std::string> windFrames;
-
-        // for (int i = 1; i <= 4; i++) {
-        //     fanFrames.push_back(PIC_PATH + "fan(" + std::to_string(i) + ").png");
-        // }
-        // for (int i = 1; i <= 10; i++) {
-        //     windFrames.push_back(PIC_PATH + "wind(" + std::to_string(i) + ").png");
-        // }
-
-        // m_Fan = std::make_shared<Fan>(fanFrames, windFrames);
-        // m_Root->AddChild(m_Fan->GetWindObject());
-        // m_Root->AddChild(m_Fan->GetFanObject());
-        // m_Fan->SetActive(true);
-
-        // m_Fan->SetPosition(
-        //     glm::vec2(150.0f, -300.0f),
-        //     glm::vec2(0.0f, 120.0f)
-        // );
-
-        // m_Fan->SetScale(
-        //     glm::vec2(0.45f, 0.45f),
-        //     glm::vec2(0.45f, 0.85f)
-        // );
-        // // =====================================================================
-
-        InitDiamonds();
+        InitDiamonds(
+        {
+            {-250.0f, -100.0f}
+        },
+        {
+            {-300.0f, -100.0f}
+        }
+    );
     }
 
     else if (level == 5) {
@@ -505,10 +528,16 @@ void App::LoadLevel(int level) {
         sgear5OriginalPos = sgear5->m_Transform.translation; 
         m_Root->AddChild(sgear5);
 
-        InitDiamonds();
+        InitDiamonds(
+        {
+            {-250.0f, -100.0f}
+        },
+        {
+            {-300.0f, -100.0f}
+        }
+    );
     }
 
- 
 }
 
 
@@ -572,19 +601,43 @@ void App::ClearLevel() {
     b2gear1OriginalPos = { 9999.0f, 9999.0f };
     b2gear2OriginalPos = { 9999.0f, 9999.0f };
     b2gear3OriginalPos = { 9999.0f, 9999.0f };
-    auto cleanup = [&](std::shared_ptr<Util::GameObject>& obj) {
-        if (obj) {
-            m_Root->RemoveChild(obj);
-            obj = nullptr;
+    // auto cleanup = [&](std::shared_ptr<Util::GameObject>& obj) {
+    //     if (obj) {
+    //         m_Root->RemoveChild(obj);
+    //         obj = nullptr;
+    //     }
+    // };
+    // ===== 清理紅寶石 =====
+    for (auto& diamond : m_RedDiamonds) {
+        if (diamond) {
+            m_Root->RemoveChild(diamond);
         }
-    };
-    cleanup(m_RedDiamond);
-    cleanup(m_BlueDiamond);
+    }
+    m_RedDiamonds.clear();
+
+    // ===== 清理藍寶石 =====
+    for (auto& diamond : m_BlueDiamonds) {
+        if (diamond) {
+            m_Root->RemoveChild(diamond);
+        }
+    }
+    m_BlueDiamonds.clear();
+
+    m_RedDiamondBasePos.clear();
+    m_BlueDiamondBasePos.clear();
+    m_RedDiamondCollected.clear();
+    m_BlueDiamondCollected.clear();
 
     if (m_Fan) {
         m_Root->RemoveChild(m_Fan->GetWindObject());
         m_Root->RemoveChild(m_Fan->GetFanObject());
         m_Fan = nullptr;
+    }
+
+    if (m_Fan2) {
+        m_Root->RemoveChild(m_Fan2->GetWindObject());
+        m_Root->RemoveChild(m_Fan2->GetFanObject());
+        m_Fan2 = nullptr;
     }
 
     if (m_ChainPlatform) {
