@@ -21,6 +21,11 @@ bool App::IsColliding(const std::shared_ptr<Util::GameObject>& p,
     float tW = tS.x;
     float tH = tS.y;
 
+    if (t == m_IceDoor || t == m_FireDoor) {
+        tW *= 0.35f;   // 門寬度判定
+        tH *= 0.60f;   // 門高度判定
+    }
+
 
 
     return (pP.x - pW / 2.0f < tP.x + tW / 2.0f &&

@@ -6,6 +6,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <ctime>
+#include <windows.h>
 
 void App::LoadLevel(int level) {
     ClearLevel();
@@ -36,10 +37,7 @@ void App::LoadLevel(int level) {
 
     //建立地圖
     {std::ifstream file(mapPath);
-    if (!file.is_open()) {
-        printf("Failed to open map file: %s\n", mapPath.c_str());
-        return;
-    }
+
     std::string line;
     for (int row = 0; row < MAP_HEIGHT && std::getline(file, line); ++row) {
         std::stringstream ss(line);
@@ -48,7 +46,7 @@ void App::LoadLevel(int level) {
         for (int col = 0; col < MAP_WIDTH && ss >> cell; ++col) {
             float posX = startX + (col * TILE_SIZE);
             float posY = startY - (row * TILE_SIZE);
-            printf("Loading cell at row %d, col %d: %s (posX: %.2f, posY: %.2f)\n", row, col, cell.c_str(), posX, posY);
+            //printf("Loading cell at row %d, col %d: %s (posX: %.2f, posY: %.2f)\n", row, col, cell.c_str(), posX, posY);
             if (cell == "1") {
                 int randomIdx = (std::rand() % 4) + 1;
                 std::string stonePath = PIC_PATH + "stone" + std::to_string(randomIdx) + ".png";
@@ -466,10 +464,20 @@ void App::LoadLevel(int level) {
 
         InitDiamonds(
         {
-            {-250.0f, -100.0f}
+            {-390.0f, -130.0f},
+            {-390.0f, 40.0f},
+            {-390.0f, 280.0f},
+            {90.0f, -188.0f},
+            {-90.0f, -27.0f},
+            {-65.0f, -211.0f}
         },
         {
-            {-300.0f, -100.0f}
+            {205.0f, 30.0f},
+            {205.0f, 120.0f},
+            {390.0f, -27.0f},
+            {286.0f, -234.0f},
+            {137.0f, -188.0f},
+            {7.0f, -138.0f}
         }
     );
     }
@@ -479,6 +487,10 @@ void App::LoadLevel(int level) {
         m_Fire->m_Transform.translation = { -100.0f, -280.0f };
         m_IceVelocityY = 0;
         m_FireVelocityY = 0;
+
+        m_IceDoorOpening = false;
+        m_FireDoorOpening = false;
+        m_DoorAnimCounter = 0;
 
         m_FireDoor->m_Transform.translation = { 220.0f, -10.0f };
         m_IceDoor->m_Transform.translation = { -220.0f, -10.0f };
@@ -566,15 +578,43 @@ void App::LoadLevel(int level) {
 
         InitDiamonds(
         {
-            {-250.0f, -100.0f}
+            {-135.0f, -4.0f},
+            {-45.0f, 202.0f},
+            {360.0f, -194.0f},
+            {360.0f, -40.0f},
+            {240.f, 64.0f},
+            {360.0f, 256.0f},
+            {205.0f, 256.0f}
         },
         {
-            {-300.0f, -100.0f}
+            {140.0f, -142.0f},
+            {45.0f, 202.0f},
+            {-360.0f, -194.0f},
+            {-360.0f, -40.0f},
+            {-240.0f, 64.0f},
+            {-360.0f, 256.0f},
+            {-205.0f, 256.0f}
+
         }
     );
     }
 
+    else if (level == 6) {
+        m_IceDoorOpening = false;
+        m_FireDoorOpening = false;
+        m_IceDoorFrameIndex = 0;
+        m_FireDoorFrameIndex = 0;
+        m_DoorAnimCounter = 0;
+
+        m_Ice->m_Transform.translation = { 9999.0f, 9999.0f };
+        m_Fire->m_Transform.translation = { 9999.0f, 9999.0f };
+
+        m_IceDoor->m_Transform.translation = { 9999.0f, 9999.0f };
+        m_FireDoor->m_Transform.translation = { 9999.0f, 9999.0f };
+
+    }
 }
+
 
 
 void App::ClearLevel() {

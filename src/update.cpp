@@ -2,7 +2,7 @@
 #include "Util/Input.hpp"
 #include "Util/Keycode.hpp"
 #include "Util/Text.hpp"
-
+#include <windows.h>
 
 static bool IsInWindArea(
     const std::shared_ptr<Util::GameObject>& player,
@@ -53,7 +53,10 @@ void App::Update() {
 
     //通關
     if (m_CurrentLevelNum == 6){
+        m_PassScreen->SetVisible(m_CurrentState == State::PAUSE);
+        Sleep(500);
         m_PassScreen->SetVisible(m_CurrentState == State::UPDATE);
+
     }
 
     //驚喜
