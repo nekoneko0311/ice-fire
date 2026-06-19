@@ -38,6 +38,7 @@
 
 ### 程式架構
 
+```text
 |--PTSD/
 |--Resources/
 |-- include/
@@ -58,7 +59,7 @@
     |-- phy.cpp
     |-- slope.cpp
     |-- update.cpp
-
+```
 
 ### 程式技術
 

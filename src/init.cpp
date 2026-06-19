@@ -70,15 +70,15 @@ void App::Start() {
     std::string font = FONT_PATH + "arial.ttf";
     float UI_Y = 310.0f; // 頂部 Y 座標
 
-    // Ice 座標文字 (靠左)
-    m_IcePosText = std::make_shared<Util::GameObject>(std::make_shared<Util::Text>(font, 20, "Ice: (0, 0)", Util::Color(51,153,255)), 10.0f);
-    m_IcePosText->m_Transform.translation = { -360.0f, UI_Y }; // 原 -560 超出範圍
-    m_Root->AddChild(m_IcePosText);
+    // // Ice 座標
+    // m_IcePosText = std::make_shared<Util::GameObject>(std::make_shared<Util::Text>(font, 20, "Ice: (0, 0)", Util::Color(51,153,255)), 10.0f);
+    // m_IcePosText->m_Transform.translation = { -360.0f, UI_Y }; 
+    // m_Root->AddChild(m_IcePosText);
 
-    // Fire 座標文字 (靠右)
-    m_FirePosText = std::make_shared<Util::GameObject>(std::make_shared<Util::Text>(font, 20, "Fire: (0, 0)", Util::Color(255, 0, 0)), 10.0f);
-    m_FirePosText->m_Transform.translation = { 360.0f, UI_Y }; // 原 570 超出範圍
-    m_Root->AddChild(m_FirePosText);
+    // // Fire 座標
+    // m_FirePosText = std::make_shared<Util::GameObject>(std::make_shared<Util::Text>(font, 20, "Fire: (0, 0)", Util::Color(255, 0, 0)), 10.0f);
+    // m_FirePosText->m_Transform.translation = { 360.0f, UI_Y }; 
+    // m_Root->AddChild(m_FirePosText);
 
     //計時文字 (置中)
     m_ScoreText = std::make_shared<Util::GameObject>(

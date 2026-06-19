@@ -525,7 +525,7 @@ void App::HandleMechanics(float iceDx, float fireDx, const Uint8* keys) {
 
     if (sgear1) {
         target = sgear1OriginalPos;
-        if (switch1State) target.y -= 75.0f;
+        if (switch1State) target.y -= 55.0f;
         moveGear(sgear1, target);
     }
 

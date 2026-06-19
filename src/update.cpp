@@ -40,6 +40,11 @@ void App::Update() {
         m_Root->Update(); return;
     }
 
+    if (Util::Input::IsKeyDown(Util::Keycode::R)) {
+    LoadLevel(m_CurrentLevelNum);
+    m_GameTime = 0.0f; 
+    }
+    
     if (Util::Input::IsKeyDown(Util::Keycode::C)) {
         if (ischeatingmode)ischeatingmode = false;
         else ischeatingmode = true;
@@ -109,8 +114,8 @@ void App::Update() {
     CheckDiamondCollection();
 
     // 4. 更新 UI
-    m_IcePosText->SetDrawable(std::make_shared<Util::Text>(FONT_PATH + "arial.ttf", 20, "Ice: (" + std::to_string((int)m_Ice->m_Transform.translation.x) + "," + std::to_string((int)m_Ice->m_Transform.translation.y) + ")", Util::Color(51,153,255)));
-    m_FirePosText->SetDrawable(std::make_shared<Util::Text>(FONT_PATH + "arial.ttf", 20, "Fire: (" + std::to_string((int)m_Fire->m_Transform.translation.x) + "," + std::to_string((int)m_Fire->m_Transform.translation.y) + ")", Util::Color(255,0,0)));
+    // m_IcePosText->SetDrawable(std::make_shared<Util::Text>(FONT_PATH + "arial.ttf", 20, "Ice: (" + std::to_string((int)m_Ice->m_Transform.translation.x) + "," + std::to_string((int)m_Ice->m_Transform.translation.y) + ")", Util::Color(51,153,255)));
+    // m_FirePosText->SetDrawable(std::make_shared<Util::Text>(FONT_PATH + "arial.ttf", 20, "Fire: (" + std::to_string((int)m_Fire->m_Transform.translation.x) + "," + std::to_string((int)m_Fire->m_Transform.translation.y) + ")", Util::Color(255,0,0)));
 
     int minutes = (int)m_GameTime / 60;
     int seconds = (int)m_GameTime % 60;

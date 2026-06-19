@@ -64,7 +64,7 @@ private:
 
     //=======物理參數====================================================================
     float m_Gravity = 0.4f;
-    float m_JumpForce = 10.0f;
+    float m_JumpForce = 8.0f;
     float m_MoveSpeed = 2.8f;
     float m_BoxMoveSpeedLimit = 3.0f;
 
